@@ -848,16 +848,36 @@ let state = {
 // =====================================================
 // SOCKET SETUP
 // =====================================================
+function emitWhenReady(event, data) {
+  if (socket.connected) {
+    socket.emit(event, data);
+    return;
+  }
+  // Server waking up - wait up to 25s then give up
+  const timeout = setTimeout(() => {
+    socket.off('connect', onConnect);
+    setLoading(false);
+    showToast('Server is starting up, try again in a moment', 'error', 4000);
+  }, 25000);
+
+  function onConnect() {
+    clearTimeout(timeout);
+    socket.emit(event, data);
+  }
+  socket.once('connect', onConnect);
+}
+
 function initSocket() {
   if (socket && socket.connected) return;
 
   try {
     socket = io(SERVER_URL, {
-      transports: ['websocket','polling'],
+      transports: ['polling', 'websocket'],
       reconnection: true,
-      reconnectionDelay: 2000,
-      reconnectionAttempts: 15,
-      timeout: 20000
+      reconnectionDelay: 1500,
+      reconnectionAttempts: 20,
+      timeout: 25000,
+      upgrade: true
     });
   } catch(e) {
     console.error('Socket init error:', e);
@@ -892,7 +912,7 @@ function initSocket() {
   socket.on('room_closed', onRoomClosed);
   socket.on('host_changed', onHostChanged);
   socket.on('error', (data) => {
-    showToast(data.message, 'error');
+    showToast(data.message, 'error', 4000);
     setLoading(false);
   });
 }
@@ -1037,15 +1057,7 @@ function createRoom() {
   state.playerName = name;
   setLoading(true);
   initSocket();
-  // Wait for connection if not yet connected (server may be waking up)
-  if (!socket.connected) {
-    showToast('Waking up server... please wait', 'info', 8000);
-    socket.once('connect', () => {
-      socket.emit('create_room', { name });
-    });
-  } else {
-    socket.emit('create_room', { name });
-  }
+  emitWhenReady('create_room', { name });
 }
 
 function joinRoom() {
@@ -1056,14 +1068,7 @@ function joinRoom() {
   state.playerName = name;
   setLoading(true);
   initSocket();
-  if (!socket.connected) {
-    showToast('Waking up server... please wait', 'info', 8000);
-    socket.once('connect', () => {
-      socket.emit('join_room', { code, name });
-    });
-  } else {
-    socket.emit('join_room', { code, name });
-  }
+  emitWhenReady('join_room', { code, name });
 }
 
 function hostStartGame() {
