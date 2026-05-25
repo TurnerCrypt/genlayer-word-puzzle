@@ -350,9 +350,22 @@ body::before{
 
 .game-layout{
   width:100%;max-width:960px;
-  display:flex;gap:14px;align-items:flex-start;
-  flex-wrap:wrap;justify-content:center;
+  display:flex;flex-direction:column;gap:12px;align-items:center;
 }
+.game-leave-btn{
+  background:rgba(255,255,255,0.06);border:1.5px solid var(--border);
+  color:var(--text2);padding:7px 14px;border-radius:50px;cursor:pointer;
+  font-family:var(--font-b);font-size:13px;font-weight:800;transition:all 0.2s;
+  white-space:nowrap;
+}
+.game-leave-btn:hover{color:var(--yellow);border-color:rgba(240,224,64,0.4)}
+.game-end-btn{
+  background:rgba(255,95,109,0.12);border:1.5px solid rgba(255,95,109,0.3);
+  color:#ff5f6d;padding:7px 14px;border-radius:50px;cursor:pointer;
+  font-family:var(--font-b);font-size:13px;font-weight:800;transition:all 0.2s;
+  white-space:nowrap;
+}
+.game-end-btn:hover{background:rgba(255,95,109,0.2)}
 .grid-wrap{flex-shrink:0;user-select:none;touch-action:none}
 .grid{
   display:grid;gap:2px;
@@ -384,15 +397,19 @@ body::before{
 .cell.flash{animation:foundFlash 0.35s ease}
 
 .word-panel{
-  flex:1;min-width:190px;max-width:250px;
+  width:100%;max-width:960px;
   background:rgba(14,14,14,0.94);
-  border:1px solid var(--border);border-radius:16px;padding:16px;
+  border:1px solid var(--border);border-radius:16px;padding:14px 16px;
 }
 .word-panel-title{
   font-size:10px;font-weight:900;letter-spacing:2px;
-  text-transform:uppercase;color:var(--text2);margin-bottom:12px;
+  text-transform:uppercase;color:var(--text2);margin-bottom:10px;
 }
-.word-list-grid{display:flex;flex-direction:column;gap:5px}
+.word-list-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:5px 10px;
+}
 .word-chip{
   padding:7px 11px;border-radius:8px;
   font-size:12px;font-weight:800;letter-spacing:0.3px;
@@ -410,22 +427,27 @@ body::before{
 .word-chip.found .check{opacity:1}
 
 .live-panel{
-  flex:1;min-width:160px;max-width:200px;
+  width:100%;max-width:960px;
   background:rgba(14,14,14,0.94);
-  border:1px solid var(--border);border-radius:16px;padding:16px;
+  border:1px solid var(--border);border-radius:16px;padding:14px 16px;
 }
 .live-panel-title{
   font-size:10px;font-weight:900;letter-spacing:2px;
   text-transform:uppercase;color:var(--text2);margin-bottom:12px;
 }
-.live-player-row{
-  display:flex;align-items:center;gap:8px;
-  padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);
-  font-size:13px;font-weight:700;
+.live-players-inner{
+  display:flex;flex-wrap:wrap;gap:8px;
 }
-.live-player-row:last-child{border-bottom:none}
-.live-player-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
-.live-player-score{font-family:var(--font-d);color:var(--yellow);font-size:18px}
+.live-player-row{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);
+  border-radius:10px;padding:6px 12px;
+  font-size:13px;font-weight:700;
+  flex-shrink:0;
+}
+.live-player-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;max-width:100px}
+.live-player-score{font-family:var(--font-d);color:var(--yellow);font-size:16px}
 
 /* ===================== LEADERBOARD ===================== */
 .lb-page{
@@ -721,49 +743,22 @@ body::before{
       <span class="timer-icon">&#9201;</span>
       <div class="timer-val" id="timer-display">5:00</div>
     </div>
-    <div class="score-pill">Found&#160;<span id="score-display">0</span></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="score-pill">Found&#160;<span id="score-display">0</span></div>
+      <button class="game-leave-btn" id="game-leave-btn" onclick="leaveGame()" style="display:none">&#8592; Leave</button>
+      <button class="game-end-btn" id="game-end-btn" onclick="endGameEarly()" style="display:none">End Game</button>
+    </div>
   </div>
   <div class="game-layout">
     <div class="grid-wrap">
       <div class="grid" id="puzzle-grid"></div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:12px;flex:1;min-width:0">
-      <div class="word-panel">
-        <div class="word-panel-title">Words to Find</div>
-        <div class="word-list-grid" id="word-chip-list"></div>
-      </div>
-      <div class="live-panel" id="live-players-panel" style="display:none">
-        <div class="live-panel-title">Live Scores</div>
-        <div id="live-players-list"></div>
-      </div>
+    <div class="word-panel">
+      <div class="word-panel-title">Words to Find</div>
+      <div class="word-list-grid" id="word-chip-list"></div>
     </div>
-  </div>
-</div>
-
-<!-- ===== LEADERBOARD ===== -->
-<div id="screen-leaderboard" class="screen">
-  <div class="page-wrap">
-    <div class="topbar">
-      <button class="back-btn" onclick="navigate('home')">&#8592; Home</button>
-      <span class="page-logo">GenPuzzles</span>
-    </div>
-    <div class="lb-page">
-      <div class="lb-trophy">&#127942;</div>
-      <div class="lb-title" id="lb-title">Game Over!</div>
-      <div class="lb-subtitle" id="lb-subtitle">Final Results</div>
-      <div class="lb-rows" id="lb-rows"></div>
-      <div class="lb-actions">
-        <button class="btn btn-yellow btn-sm" onclick="playAgain()">Play Again</button>
-        <button class="btn btn-ghost btn-sm" onclick="navigate('home')">Home</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-</div>
-<div id="toast"></div>
-<div id="word-popup"></div>
-<script>
+    <div class="live-panel" id="live-players-panel" style="display:none">
+ <script>
 // ===================================================
 // CONFIG
 // ===================================================
@@ -810,6 +805,7 @@ let state = {
   realtimeSub: null,
   playersSub: null,
   lobbyPollInterval: null,
+  launching: false,
   liveScores: {}
 };
 
@@ -1394,6 +1390,9 @@ async function hostStartGame() {
 }
 
 function launchMultiGame(timerEndMs) {
+  if (state.launching) return; // prevent double countdown
+  state.launching = true;
+  if (state.lobbyPollInterval) { clearInterval(state.lobbyPollInterval); state.lobbyPollInterval = null; }
   if (state.playersSub) { state.playersSub.unsubscribe(); state.playersSub = null; }
   state.mode = 'multi';
   state.foundWords = [];
@@ -1407,6 +1406,11 @@ function launchMultiGame(timerEndMs) {
     renderWordChips(WORD_LIST);
     document.getElementById('live-players-panel').style.display = 'block';
     document.getElementById('score-display').textContent = '0';
+    // Show leave for players, end game for host
+    const leaveBtn = document.getElementById('game-leave-btn');
+    const endBtn = document.getElementById('game-end-btn');
+    if (leaveBtn) leaveBtn.style.display = state.isHost ? 'none' : 'inline-flex';
+    if (endBtn) endBtn.style.display = state.isHost ? 'inline-flex' : 'none';
     startTimer(timerEndMs);
     subscribeMultiGame();
   });
@@ -1459,14 +1463,13 @@ function renderLiveScores() {
   const list = document.getElementById('live-players-list');
   if (!list) return;
   const sorted = Object.entries(state.liveScores).sort((a, b) => b[1] - a[1]);
-  list.innerHTML = '';
+  list.innerHTML = '<div class="live-players-inner"></div>';
+  const inner = list.querySelector('.live-players-inner');
   sorted.forEach(([name, score]) => {
     const row = document.createElement('div');
     row.className = 'live-player-row';
-    row.innerHTML = `
-      <span class="live-player-name">${name}${name === state.playerName ? ' <span class="live-you-badge">You</span>' : ''}</span>
-      <span class="live-player-score">${score}</span>`;
-    list.appendChild(row);
+    row.innerHTML = `<span class="live-player-name">${name}${name === state.playerName ? ' <span class="live-you-badge">You</span>' : ''}</span><span class="live-player-score">${score}</span>`;
+    inner.appendChild(row);
   });
 }
 
@@ -1493,6 +1496,7 @@ async function leaveRoom() {
   state.roomCode = null;
   state.playerId = null;
   state.isHost = false;
+  state.launching = false;
   sessionStorage.removeItem('gp_session');
   navigate('home');
 }
@@ -1507,6 +1511,32 @@ function copyRoomCode() {
 // ===================================================
 // END GAME
 // ===================================================
+async function leaveGame() {
+  // Non-host leaves mid-game
+  clearInterval(state.timerInterval);
+  if (state.realtimeSub) { state.realtimeSub.unsubscribe(); state.realtimeSub = null; }
+  if (state.playerId) {
+    await sb.from('wordpuzzle_players').delete().eq('id', state.playerId);
+  }
+  state.roomId = null;
+  state.roomCode = null;
+  state.playerId = null;
+  state.launching = false;
+  sessionStorage.removeItem('gp_session');
+  navigate('home');
+}
+
+async function endGameEarly() {
+  // Host ends game for everyone
+  if (!state.isHost || !state.roomId) return;
+  clearInterval(state.timerInterval);
+  if (state.realtimeSub) { state.realtimeSub.unsubscribe(); state.realtimeSub = null; }
+  await syncPlayerScore();
+  await sb.from('wordpuzzle_rooms').update({ status: 'finished' }).eq('id', state.roomId);
+  sessionStorage.removeItem('gp_session');
+  await showMultiLeaderboard();
+}
+
 async function endGame(reason) {
   clearInterval(state.timerInterval);
   if (state.realtimeSub) { state.realtimeSub.unsubscribe(); state.realtimeSub = null; }
@@ -1639,6 +1669,44 @@ async function restoreSession() {
   }
 
   if (room.status === 'active') {
+    const timerEnd = new Date(room.ends_at).getTime();
+    if (timerEnd <= Date.now()) {
+      sessionStorage.removeItem('gp_session');
+      navigate('home');
+      return;
+    }
+    state.mode = 'multi';
+    navigate('game');
+    renderGrid(state.grid);
+    renderWordChips(WORD_LIST);
+    // Re-mark already-found words
+    state.foundWords.forEach(w => {
+      const chip = document.getElementById('chip-' + w);
+      if (chip) chip.className = 'word-chip found';
+    });
+    document.getElementById('score-display').textContent = state.foundWords.length;
+    document.getElementById('live-players-panel').style.display = 'block';
+    const leaveBtn = document.getElementById('game-leave-btn');
+    const endBtn = document.getElementById('game-end-btn');
+    if (leaveBtn) leaveBtn.style.display = sess.isHost ? 'none' : 'inline-flex';
+    if (endBtn) endBtn.style.display = sess.isHost ? 'inline-flex' : 'none';
+    startTimer(timerEnd);
+    subscribeMultiGame();
+    return;
+  }
+
+  navigate('home');
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const raw = sessionStorage.getItem('gp_session');
+  if (raw) {
+    restoreSession();
+  } else {
+    navigate('home');
+  }
+});
+</script>status === 'active') {
     const timerEnd = new Date(room.ends_at).getTime();
     if (timerEnd <= Date.now()) {
       sessionStorage.removeItem('gp_session');
