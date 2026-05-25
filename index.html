@@ -1352,7 +1352,7 @@ function showLeaderboard(finalScores, reason) {
   navigate('leaderboard');
   const titleEl = document.getElementById('lb-title');
   const subEl = document.getElementById('lb-subtitle');
-  if (titleEl) titleEl.textContent = reason === 'timeout' ? 'Time's Up!' : 'Game Over!';
+  if (titleEl) titleEl.textContent = reason === 'timeout' ? "Time's Up!" : 'Game Over!';
   if (subEl) subEl.textContent = 'Final Results';
   renderLeaderboardRows(finalScores);
 }
