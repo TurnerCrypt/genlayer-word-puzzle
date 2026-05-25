@@ -809,6 +809,7 @@ let state = {
   selCells: [],
   realtimeSub: null,
   playersSub: null,
+  lobbyPollInterval: null,
   liveScores: {}
 };
 
@@ -1103,6 +1104,7 @@ function wordFound(word) {
   showToast(word + ' found!', 'success');
 
   syncPlayerScore();
+  saveSession();
 
   // Check all found
   if (state.foundWords.length === WORD_LIST.length) {
@@ -1186,6 +1188,7 @@ async function createRoom() {
 
   if (pe) { showToast('Error joining room', 'error'); return; }
   state.playerId = player.id;
+  saveSession();
 
   navigate('lobby');
   document.getElementById('lobby-code').textContent = code;
@@ -1248,6 +1251,7 @@ async function joinRoom() {
   state.playerId = player.id;
   state.foundWords = [];
   state.foundCells = {};
+  saveSession();
 
   if (room.status === 'active') {
     // Jump straight into game
@@ -1296,18 +1300,21 @@ function buildPlacementsFromGrid(grid, words) {
 // LOBBY REALTIME
 // ===================================================
 function subscribeLobby() {
-  if (state.realtimeSub) state.realtimeSub.unsubscribe();
+  if (state.playersSub) { state.playersSub.unsubscribe(); state.playersSub = null; }
+  if (state.lobbyPollInterval) { clearInterval(state.lobbyPollInterval); }
 
-  // Watch players joining
-  state.playersSub = sb.channel('lobby-' + state.roomId)
+  // Realtime for player joins - broad channel, filter manually
+  state.playersSub = sb.channel('lobby-players-' + state.roomId)
     .on('postgres_changes', {
-      event: '*', schema: 'public', table: 'wordpuzzle_players',
-      filter: 'room_id=eq.' + state.roomId
-    }, () => { refreshLobbyPlayers(); })
-    .on('postgres_changes', {
-      event: 'UPDATE', schema: 'public', table: 'wordpuzzle_rooms',
-      filter: 'id=eq.' + state.roomId
+      event: '*', schema: 'public', table: 'wordpuzzle_players'
     }, (payload) => {
+      if (payload.new && payload.new.room_id === state.roomId) refreshLobbyPlayers();
+      if (payload.old && payload.old.room_id === state.roomId) refreshLobbyPlayers();
+    })
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'wordpuzzle_rooms'
+    }, (payload) => {
+      if (!payload.new || payload.new.id !== state.roomId) return;
       if (payload.new.status === 'active') {
         state.grid = payload.new.grid;
         state.wordPlacements = buildPlacementsFromGrid(payload.new.grid, WORD_LIST);
@@ -1316,7 +1323,29 @@ function subscribeLobby() {
     })
     .subscribe();
 
+  // Polling fallback every 3s - ensures lobby stays in sync even if realtime drops
+  state.lobbyPollInterval = setInterval(() => {
+    if (state.screen === 'lobby') {
+      refreshLobbyPlayers();
+      checkRoomStarted();
+    } else {
+      clearInterval(state.lobbyPollInterval);
+    }
+  }, 3000);
+
   refreshLobbyPlayers();
+}
+
+async function checkRoomStarted() {
+  if (!state.roomId) return;
+  const { data } = await sb.from('wordpuzzle_rooms')
+    .select('status,grid,ends_at').eq('id', state.roomId).single();
+  if (!data) return;
+  if (data.status === 'active' && state.screen === 'lobby') {
+    state.grid = data.grid;
+    state.wordPlacements = buildPlacementsFromGrid(data.grid, WORD_LIST);
+    launchMultiGame(new Date(data.ends_at).getTime());
+  }
 }
 
 async function refreshLobbyPlayers() {
@@ -1453,8 +1482,9 @@ async function syncPlayerScore() {
 // LEAVE ROOM
 // ===================================================
 async function leaveRoom() {
-  if (state.playersSub) state.playersSub.unsubscribe();
-  if (state.realtimeSub) state.realtimeSub.unsubscribe();
+  if (state.lobbyPollInterval) { clearInterval(state.lobbyPollInterval); state.lobbyPollInterval = null; }
+  if (state.playersSub) { state.playersSub.unsubscribe(); state.playersSub = null; }
+  if (state.realtimeSub) { state.realtimeSub.unsubscribe(); state.realtimeSub = null; }
   if (state.playerId) {
     await sb.from('wordpuzzle_players').delete().eq('id', state.playerId);
   }
@@ -1463,6 +1493,7 @@ async function leaveRoom() {
   state.roomCode = null;
   state.playerId = null;
   state.isHost = false;
+  sessionStorage.removeItem('gp_session');
   navigate('home');
 }
 
@@ -1488,6 +1519,7 @@ async function endGame(reason) {
   if (state.isHost) {
     await sb.from('wordpuzzle_rooms').update({ status: 'finished' }).eq('id', state.roomId);
   }
+  sessionStorage.removeItem('gp_session');
   await showMultiLeaderboard();
 }
 
@@ -1547,11 +1579,98 @@ function playAgain() {
 // ===================================================
 // INIT
 // ===================================================
+// ===================================================
+// SESSION PERSISTENCE
+// ===================================================
+function saveSession() {
+  if (!state.roomId) { sessionStorage.removeItem('gp_session'); return; }
+  const sess = {
+    playerName: state.playerName,
+    playerId: state.playerId,
+    roomId: state.roomId,
+    roomCode: state.roomCode,
+    isHost: state.isHost,
+    screen: state.screen,
+    foundWords: state.foundWords,
+    foundCells: state.foundCells
+  };
+  sessionStorage.setItem('gp_session', JSON.stringify(sess));
+}
+
+async function restoreSession() {
+  const raw = sessionStorage.getItem('gp_session');
+  if (!raw) { navigate('home'); return; }
+  let sess;
+  try { sess = JSON.parse(raw); } catch(e) { navigate('home'); return; }
+
+  // Check room still exists and is valid
+  const { data: room, error } = await sb.from('wordpuzzle_rooms')
+    .select('*').eq('id', sess.roomId).single();
+
+  if (error || !room) {
+    sessionStorage.removeItem('gp_session');
+    navigate('home');
+    return;
+  }
+
+  // Restore state
+  state.playerName = sess.playerName;
+  state.playerId = sess.playerId;
+  state.roomId = sess.roomId;
+  state.roomCode = sess.roomCode;
+  state.isHost = sess.isHost;
+  state.foundWords = sess.foundWords || [];
+  state.foundCells = sess.foundCells || {};
+  state.grid = room.grid;
+  state.wordPlacements = buildPlacementsFromGrid(room.grid, WORD_LIST);
+
+  if (room.status === 'finished') {
+    sessionStorage.removeItem('gp_session');
+    navigate('home');
+    return;
+  }
+
+  if (room.status === 'waiting') {
+    navigate('lobby');
+    document.getElementById('lobby-code').textContent = sess.roomCode;
+    if (sess.isHost) document.getElementById('host-start-wrap').style.display = 'block';
+    subscribeLobby();
+    return;
+  }
+
+  if (room.status === 'active') {
+    const timerEnd = new Date(room.ends_at).getTime();
+    if (timerEnd <= Date.now()) {
+      sessionStorage.removeItem('gp_session');
+      navigate('home');
+      return;
+    }
+    state.mode = 'multi';
+    navigate('game');
+    renderGrid(state.grid);
+    renderWordChips(WORD_LIST);
+    // Re-mark already-found words
+    state.foundWords.forEach(w => {
+      const chip = document.getElementById('chip-' + w);
+      if (chip) chip.className = 'word-chip found';
+    });
+    document.getElementById('score-display').textContent = state.foundWords.length;
+    document.getElementById('live-players-panel').style.display = 'block';
+    startTimer(timerEnd);
+    subscribeMultiGame();
+    return;
+  }
+
+  navigate('home');
+}
+
 window.addEventListener('DOMContentLoaded', () => {
-  const hash = location.hash.replace('#', '');
-  const safe = ['home','mode-select','create-room','join-room'];
-  if (hash && safe.includes(hash)) navigate(hash);
-  else navigate('home');
+  const raw = sessionStorage.getItem('gp_session');
+  if (raw) {
+    restoreSession();
+  } else {
+    navigate('home');
+  }
 });
 </script>
 </body>
