@@ -1500,6 +1500,20 @@ function navigate(screen) {
   const el = document.getElementById('screen-' + screen);
   if (el) el.classList.add('active');
   history.pushState({ screen }, '', '#' + screen);
+
+  // Clear input fields when entering create/join screens
+  if (screen === 'create-room') {
+    const el = document.getElementById('host-name');
+    if (el) el.value = '';
+  }
+  if (screen === 'join-room') {
+    const code = document.getElementById('join-code');
+    const name = document.getElementById('join-name');
+    if (code) code.value = '';
+    if (name) name.value = '';
+  }
+  // Re-enable buttons in case they were disabled
+  setLoading(false);
 }
 window.addEventListener('popstate', (e) => {
   const s = (e.state && e.state.screen) || 'home';
