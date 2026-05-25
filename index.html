@@ -1,0 +1,1799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GenLayer Word Puzzle</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg: #0f1225;
+    --bg2: #161b35;
+    --bg3: #1e2547;
+    --cyan: #00e5ff;
+    --coral: #ff5f6d;
+    --yellow: #ffd93d;
+    --purple: #c77dff;
+    --green: #06d6a0;
+    --text: #e8eaf6;
+    --text2: #9099c8;
+    --border: rgba(255,255,255,0.08);
+    --card: rgba(30,37,71,0.9);
+    --gold: #ffd700;
+    --silver: #c0c0c0;
+    --bronze: #cd7f32;
+    --cell: 38px;
+    --font-display: 'Fredoka One', cursive;
+    --font-body: 'Nunito', sans-serif;
+  }
+  [data-theme="light"] {
+    --bg: #f0f4ff;
+    --bg2: #e2e8ff;
+    --bg3: #d0d8f8;
+    --text: #1a1f3a;
+    --text2: #4a5280;
+    --border: rgba(0,0,0,0.1);
+    --card: rgba(255,255,255,0.85);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+    transition: background 0.3s, color 0.3s;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 10%, rgba(0,229,255,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 80% 80%, rgba(199,125,255,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 30% at 50% 50%, rgba(255,95,109,0.05) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ---- LAYOUT ---- */
+  #app {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 16px 40px;
+    min-height: 100vh;
+    animation: fadeIn 0.3s ease;
+  }
+  .screen.active { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ---- TOP BAR ---- */
+  .topbar {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-shrink: 0;
+  }
+  .back-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 8px 16px;
+    border-radius: 50px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 700;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .back-btn:hover { color: var(--cyan); border-color: var(--cyan); }
+  .theme-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .theme-btn:hover { border-color: var(--yellow); }
+
+  /* ---- HOME ---- */
+  .logo-wrap {
+    text-align: center;
+    margin: 20px 0 36px;
+  }
+  .logo-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    border-radius: 20px;
+    padding: 3px;
+    margin-bottom: 16px;
+  }
+  .logo-inner {
+    background: var(--bg);
+    border-radius: 18px;
+    padding: 16px 32px;
+  }
+  .logo-title {
+    font-family: var(--font-display);
+    font-size: clamp(32px, 8vw, 56px);
+    background: linear-gradient(135deg, var(--cyan), var(--purple), var(--coral));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+  .logo-sub {
+    font-size: 13px;
+    color: var(--text2);
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .tagline {
+    color: var(--text2);
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 40px;
+  }
+  .home-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+    max-width: 360px;
+  }
+
+  /* ---- BUTTONS ---- */
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 16px 24px;
+    border-radius: 14px;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 800;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    letter-spacing: 0.3px;
+  }
+  .btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0);
+    transition: background 0.2s;
+  }
+  .btn:hover::after { background: rgba(255,255,255,0.08); }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--cyan), #0099bb);
+    color: #0a0f1e;
+    box-shadow: 0 4px 20px rgba(0,229,255,0.3);
+  }
+  .btn-coral {
+    background: linear-gradient(135deg, var(--coral), #cc3344);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(255,95,109,0.3);
+  }
+  .btn-purple {
+    background: linear-gradient(135deg, var(--purple), #9b55cc);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(199,125,255,0.3);
+  }
+  .btn-yellow {
+    background: linear-gradient(135deg, var(--yellow), #e6b800);
+    color: #1a1200;
+    box-shadow: 0 4px 20px rgba(255,217,61,0.3);
+  }
+  .btn-ghost {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text2);
+  }
+  .btn-ghost:hover { border-color: var(--cyan); color: var(--cyan); }
+  .btn-sm {
+    padding: 10px 18px;
+    font-size: 14px;
+    border-radius: 10px;
+    width: auto;
+  }
+
+  /* ---- CARD ---- */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    width: 100%;
+    max-width: 420px;
+    backdrop-filter: blur(12px);
+  }
+  .card-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    color: var(--text);
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  /* ---- INPUTS ---- */
+  .input-group { margin-bottom: 16px; }
+  .input-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 6px;
+  }
+  .input {
+    width: 100%;
+    padding: 13px 16px;
+    background: var(--bg2);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 700;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .input:focus { border-color: var(--cyan); }
+  .input::placeholder { color: var(--text2); font-weight: 600; }
+
+  /* ---- ROOM CODE ---- */
+  .room-code-display {
+    text-align: center;
+    margin: 16px 0;
+  }
+  .room-code-label { font-size: 12px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--text2); margin-bottom: 8px; }
+  .room-code-value {
+    font-family: var(--font-display);
+    font-size: 48px;
+    color: var(--cyan);
+    letter-spacing: 8px;
+    text-shadow: 0 0 20px rgba(0,229,255,0.4);
+  }
+
+  /* ---- LOBBY ---- */
+  .player-list {
+    background: var(--bg2);
+    border-radius: 12px;
+    padding: 12px;
+    margin: 16px 0;
+    min-height: 60px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .player-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text);
+  }
+  .player-item:hover { background: var(--bg3); }
+  .player-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    flex-shrink: 0;
+  }
+  .host-badge {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--yellow);
+    background: rgba(255,217,61,0.15);
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+
+  /* ---- GAME SCREEN ---- */
+  #screen-game {
+    padding: 12px 12px 40px;
+  }
+  .game-header {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .game-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .timer-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 50px;
+    padding: 6px 16px;
+  }
+  .timer-icon { font-size: 16px; }
+  .timer-val {
+    font-family: var(--font-display);
+    font-size: 22px;
+    color: var(--yellow);
+    min-width: 48px;
+    text-align: center;
+    transition: color 0.3s;
+  }
+  .timer-val.urgent { color: var(--coral); animation: pulse 0.8s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+  .score-pill {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 50px;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text2);
+  }
+  .score-pill span { color: var(--cyan); font-family: var(--font-display); font-size: 18px; }
+
+  /* game layout */
+  .game-layout {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* ---- GRID ---- */
+  .grid-wrap {
+    flex-shrink: 0;
+    user-select: none;
+    touch-action: none;
+  }
+  .grid {
+    display: grid;
+    gap: 2px;
+    background: var(--bg2);
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    padding: 10px;
+    position: relative;
+  }
+  .cell {
+    width: var(--cell);
+    height: var(--cell);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 16px;
+    color: var(--text);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s, transform 0.1s;
+    position: relative;
+    background: transparent;
+  }
+  .cell:hover { background: rgba(255,255,255,0.05); }
+  .cell.selecting {
+    background: rgba(0,229,255,0.25);
+    color: var(--cyan);
+    transform: scale(1.05);
+    z-index: 2;
+  }
+  .cell.found-0 { background: rgba(0,229,255,0.2); color: var(--cyan); }
+  .cell.found-1 { background: rgba(255,95,109,0.2); color: var(--coral); }
+  .cell.found-2 { background: rgba(255,217,61,0.2); color: var(--yellow); }
+  .cell.found-3 { background: rgba(199,125,255,0.2); color: var(--purple); }
+  .cell.found-4 { background: rgba(6,214,160,0.2); color: var(--green); }
+  .cell.found-5 { background: rgba(0,229,255,0.15); color: #7ecfff; }
+  .cell.found-6 { background: rgba(255,140,0,0.2); color: #ffa040; }
+  .cell.found-7 { background: rgba(255,20,147,0.2); color: #ff6eb4; }
+
+  /* word found flash */
+  @keyframes foundFlash {
+    0% { transform: scale(1.15); }
+    50% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+  .cell.flash { animation: foundFlash 0.4s ease; }
+
+  /* ---- WORD LIST ---- */
+  .word-panel {
+    flex: 1;
+    min-width: 200px;
+    max-width: 260px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+  }
+  .word-panel-title {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 12px;
+  }
+  .word-list-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .word-chip {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: var(--text2);
+    background: var(--bg2);
+    border: 1.5px solid transparent;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .word-chip.found {
+    color: var(--green);
+    background: rgba(6,214,160,0.1);
+    border-color: rgba(6,214,160,0.3);
+    text-decoration: line-through;
+    text-decoration-color: rgba(6,214,160,0.5);
+  }
+  .word-chip .check { font-size: 12px; opacity: 0; transition: opacity 0.3s; }
+  .word-chip.found .check { opacity: 1; }
+
+  /* ---- LIVE PLAYERS SIDEBAR ---- */
+  .live-panel {
+    flex: 1;
+    min-width: 180px;
+    max-width: 220px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+  }
+  .live-panel-title {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 12px;
+  }
+  .live-player-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .live-player-row:last-child { border-bottom: none; }
+  .live-player-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .live-player-score {
+    font-family: var(--font-display);
+    color: var(--cyan);
+    font-size: 16px;
+  }
+  .live-you-badge {
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--yellow);
+    background: rgba(255,217,61,0.15);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  /* ---- LEADERBOARD ---- */
+  .leaderboard-wrap {
+    width: 100%;
+    max-width: 560px;
+  }
+  .lb-title {
+    font-family: var(--font-display);
+    font-size: 32px;
+    text-align: center;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--yellow), var(--coral));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .lb-subtitle { text-align: center; color: var(--text2); font-size: 14px; font-weight: 600; margin-bottom: 28px; }
+  .lb-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    margin-bottom: 8px;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    transition: transform 0.2s;
+    animation: slideIn 0.3s ease both;
+  }
+  .lb-row:hover { transform: translateX(4px); }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
+  .lb-row.rank-1 { border-color: var(--gold); background: rgba(255,215,0,0.08); }
+  .lb-row.rank-2 { border-color: var(--silver); background: rgba(192,192,192,0.08); }
+  .lb-row.rank-3 { border-color: var(--bronze); background: rgba(205,127,50,0.08); }
+  .lb-rank {
+    font-family: var(--font-display);
+    font-size: 22px;
+    min-width: 36px;
+    text-align: center;
+  }
+  .rank-1 .lb-rank { color: var(--gold); }
+  .rank-2 .lb-rank { color: var(--silver); }
+  .rank-3 .lb-rank { color: var(--bronze); }
+  .lb-name { flex: 1; font-weight: 800; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-words {
+    font-family: var(--font-display);
+    font-size: 20px;
+    color: var(--cyan);
+  }
+  .lb-time { font-size: 12px; color: var(--text2); font-weight: 700; text-align: right; }
+
+  /* ---- TOAST ---- */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 24px;
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 700;
+    z-index: 9999;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+    max-width: 90vw;
+    text-align: center;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+  #toast.success { border-color: var(--green); color: var(--green); }
+  #toast.error { border-color: var(--coral); color: var(--coral); }
+  #toast.info { border-color: var(--cyan); color: var(--cyan); }
+
+  /* ---- WORD FOUND POPUP ---- */
+  #word-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    color: #0a0f1e;
+    padding: 12px 28px;
+    border-radius: 50px;
+    font-family: var(--font-display);
+    font-size: 22px;
+    z-index: 9998;
+    pointer-events: none;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+  }
+  #word-popup.show {
+    transform: translate(-50%, -50%) scale(1);
+    animation: popupAnim 1.2s ease forwards;
+  }
+  @keyframes popupAnim {
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+    30% { transform: translate(-50%, -60%) scale(1); opacity: 1; }
+    70% { transform: translate(-50%, -70%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -80%) scale(0.8); opacity: 0; }
+  }
+
+  /* ---- STATUS MSG ---- */
+  .status-msg {
+    text-align: center;
+    padding: 16px;
+    font-size: 14px;
+    color: var(--text2);
+    font-weight: 600;
+  }
+
+  /* ---- MOBILE ADJUSTMENTS ---- */
+  @media (max-width: 600px) {
+    :root { --cell: 30px; }
+    .cell { font-size: 13px; border-radius: 6px; }
+    .grid { padding: 6px; gap: 1px; }
+    .game-layout { gap: 12px; }
+    .word-panel, .live-panel { max-width: 100%; min-width: 0; width: 100%; }
+    .game-header { font-size: 14px; }
+    .game-title { font-size: 17px; }
+    .lb-row { padding: 10px 14px; gap: 10px; }
+  }
+  @media (max-width: 420px) {
+    :root { --cell: 26px; }
+    .cell { font-size: 11px; border-radius: 5px; }
+    .grid { padding: 5px; }
+  }
+
+  /* ---- SPINNER ---- */
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--cyan);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 20px auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* tab switcher */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--bg2);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 360px;
+  }
+  .tab {
+    flex: 1;
+    padding: 10px;
+    border-radius: 9px;
+    border: none;
+    background: transparent;
+    color: var(--text2);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab.active { background: var(--card); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+
+  .sep { width: 100%; max-width: 360px; text-align: center; color: var(--text2); font-size: 13px; font-weight: 600; margin: 8px 0; }
+
+  /* waiting room overlay */
+  .waiting-info {
+    text-align: center;
+    margin: 8px 0 16px;
+  }
+  .waiting-dots span {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--cyan);
+    margin: 0 3px;
+    animation: dotBounce 1.2s ease infinite;
+  }
+  .waiting-dots span:nth-child(2) { animation-delay: 0.2s; background: var(--purple); }
+  .waiting-dots span:nth-child(3) { animation-delay: 0.4s; background: var(--coral); }
+  @keyframes dotBounce {
+    0%,80%,100% { transform: translateY(0); }
+    40% { transform: translateY(-8px); }
+  }
+
+  .countdown-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5000;
+    backdrop-filter: blur(8px);
+  }
+  .countdown-num {
+    font-family: var(--font-display);
+    font-size: 120px;
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: countScale 1s ease;
+  }
+  @keyframes countScale {
+    0% { transform: scale(0.3); opacity: 0; }
+    40% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .finished-msg {
+    font-family: var(--font-display);
+    font-size: clamp(20px, 5vw, 32px);
+    text-align: center;
+    color: var(--yellow);
+    margin-bottom: 8px;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== HOME ===== -->
+  <div id="screen-home" class="screen active">
+    <div class="topbar" style="justify-content:flex-end">
+      <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme">☀️</button>
+    </div>
+    <div class="logo-wrap">
+      <div class="logo-badge">
+        <div class="logo-inner">
+          <div class="logo-title">WordQuest</div>
+        </div>
+      </div>
+      <div class="logo-sub">GenLayer Edition</div>
+    </div>
+    <p class="tagline">Find hidden GenLayer words. Race the clock.</p>
+    <div class="home-actions">
+      <button class="btn btn-primary" onclick="navigate('solo-setup')">🎮 Solo Play</button>
+      <button class="btn btn-purple" onclick="navigate('create-room')">🏠 Create Room</button>
+      <button class="btn btn-coral" onclick="navigate('join-room')">🚀 Join Room</button>
+      <button class="btn btn-ghost" onclick="navigate('global-lb')">🏆 Leaderboard</button>
+    </div>
+  </div>
+
+  <!-- ===== SOLO SETUP ===== -->
+  <div id="screen-solo-setup" class="screen">
+    <div class="topbar">
+      <button class="back-btn" onclick="navigate('home')">← Back</button>
+      <button class="theme-btn" onclick="toggleTheme()">☀️</button>
+    </div>
+    <div class="card">
+      <div class="card-title">🎮 Solo Play</div>
+      <div class="input-group">
+        <label class="input-label">Your Name</label>
+        <input class="input" id="solo-name" placeholder="Enter your name" maxlength="20" oninput="sanitizeInput(this)">
+      </div>
+      <button class="btn btn-primary" onclick="startSolo()">Start Game</button>
+    </div>
+  </div>
+
+  <!-- ===== CREATE ROOM ===== -->
+  <div id="screen-create-room" class="screen">
+    <div class="topbar">
+      <button class="back-btn" onclick="navigate('home')">← Back</button>
+      <button class="theme-btn" onclick="toggleTheme()">☀️</button>
+    </div>
+    <div class="card">
+      <div class="card-title">🏠 Create Room</div>
+      <div class="input-group">
+        <label class="input-label">Your Name</label>
+        <input class="input" id="host-name" placeholder="Enter your name" maxlength="20" oninput="sanitizeInput(this)">
+      </div>
+      <button class="btn btn-purple" onclick="createRoom()">Create Room</button>
+    </div>
+  </div>
+
+  <!-- ===== JOIN ROOM ===== -->
+  <div id="screen-join-room" class="screen">
+    <div class="topbar">
+      <button class="back-btn" onclick="navigate('home')">← Back</button>
+      <button class="theme-btn" onclick="toggleTheme()">☀️</button>
+    </div>
+    <div class="card">
+      <div class="card-title">🚀 Join Room</div>
+      <div class="input-group">
+        <label class="input-label">Room Code</label>
+        <input class="input" id="join-code" placeholder="e.g. ABCD" maxlength="6" style="text-transform:uppercase;letter-spacing:4px;font-family:var(--font-display);font-size:22px;text-align:center" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Your Name</label>
+        <input class="input" id="join-name" placeholder="Enter your name" maxlength="20" oninput="sanitizeInput(this)">
+      </div>
+      <button class="btn btn-coral" onclick="joinRoom()">Join Room</button>
+    </div>
+  </div>
+
+  <!-- ===== LOBBY ===== -->
+  <div id="screen-lobby" class="screen">
+    <div class="topbar">
+      <button class="back-btn" onclick="leaveRoom()">← Leave</button>
+      <button class="theme-btn" onclick="toggleTheme()">☀️</button>
+    </div>
+    <div class="card" style="max-width:480px">
+      <div class="card-title">🕹️ Waiting Room</div>
+      <div class="room-code-display">
+        <div class="room-code-label">Room Code</div>
+        <div class="room-code-value" id="lobby-code">----</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="margin:0 auto 16px;display:flex;width:auto" onclick="copyRoomCode()">📋 Copy Code</button>
+      <div class="waiting-info">
+        <div class="waiting-dots"><span></span><span></span><span></span></div>
+        <p style="color:var(--text2);font-size:13px;font-weight:600;margin-top:8px" id="lobby-status-text">Waiting for players...</p>
+      </div>
+      <div class="input-label" style="margin-bottom:8px">Players</div>
+      <div class="player-list" id="lobby-player-list"></div>
+      <div id="host-start-wrap" style="display:none;margin-top:12px">
+        <button class="btn btn-primary" onclick="hostStartGame()" id="host-start-btn">🚀 Start Game</button>
+        <p style="color:var(--text2);font-size:12px;text-align:center;margin-top:8px;font-weight:600">Need at least 2 players to start</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== GAME ===== -->
+  <div id="screen-game" class="screen">
+    <div class="game-header">
+      <div class="game-title">WordQuest</div>
+      <div class="timer-wrap">
+        <span class="timer-icon">⏱</span>
+        <div class="timer-val" id="timer-display">5:00</div>
+      </div>
+      <div class="score-pill">Found: <span id="score-display">0</span></div>
+    </div>
+    <div class="game-layout">
+      <div class="grid-wrap">
+        <div class="grid" id="puzzle-grid"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;flex:1;min-width:0">
+        <div class="word-panel">
+          <div class="word-panel-title">Words to Find</div>
+          <div class="word-list-grid" id="word-chip-list"></div>
+        </div>
+        <div class="live-panel" id="live-players-panel" style="display:none">
+          <div class="live-panel-title">Live Scores</div>
+          <div id="live-players-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== LEADERBOARD ===== -->
+  <div id="screen-leaderboard" class="screen">
+    <div class="topbar">
+      <button class="back-btn" id="lb-back-btn" onclick="navigate('home')">← Home</button>
+      <button class="theme-btn" onclick="toggleTheme()">☀️</button>
+    </div>
+    <div class="leaderboard-wrap">
+      <div class="lb-title" id="lb-title">Game Over!</div>
+      <div class="lb-subtitle" id="lb-subtitle">Final Results</div>
+      <div id="lb-rows"></div>
+      <div style="margin-top:20px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" onclick="playAgain()">Play Again</button>
+        <button class="btn btn-ghost btn-sm" onclick="navigate('home')">Home</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== GLOBAL LEADERBOARD ===== -->
+  <div id="screen-global-lb" class="screen">
+    <div class="topbar">
+      <button class="back-btn" onclick="navigate('home')">← Back</button>
+      <button class="theme-btn" onclick="toggleTheme()">☀️</button>
+    </div>
+    <div class="leaderboard-wrap">
+      <div class="lb-title">Hall of Fame</div>
+      <div class="lb-subtitle">Top solo scores - Week 1</div>
+      <div id="global-lb-rows"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast + popup -->
+<div id="toast"></div>
+<div id="word-popup"></div>
+
+<script>
+// ===================================================
+// CONFIG
+// ===================================================
+const SUPABASE_URL = 'https://lgydlidqobjdyssuanqw.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxneWRsaWRxb2JqZHlzc3VhbnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2ODU1NDAsImV4cCI6MjA5NTI2MTU0MH0.IxPMfmowznZbG2hIVbx7hTCv6-ZMdEHeoOMwNvavBMo';
+const WEEK_LABEL = 'week1';
+const GAME_DURATION = 5 * 60; // 5 min in seconds
+const GRID_SIZE = 15;
+const DIRECTIONS = [
+  [0,1],[0,-1],[1,0],[-1,0],
+  [1,1],[1,-1],[-1,1],[-1,-1]
+];
+const WORD_LIST = [
+  'CONSENSUS','VALIDATOR','INTELLIGENT','CONTRACT','GENLAYER',
+  'LEADER','EQUIVALENT','NONDET','CALLDATA','TESTNET',
+  'BRADBURY','RECEIPT','FINALIZED','ACCEPTED','TREEMAP',
+  'PYTHON','STAKING','PREMIUM','OPTIMISTIC','DEMOCRACY',
+  'DELEGATED','APPEAL','GENVM','ROLLUP','ORACLE',
+  'SANDBOX','WEBHOOK','PROMPT','VOTING','DISPATCH'
+];
+const WORD_COLORS = 8;
+
+// ===================================================
+// STATE
+// ===================================================
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let state = {
+  screen: 'home',
+  mode: null, // 'solo' | 'multi'
+  playerName: '',
+  playerId: null,
+  roomId: null,
+  roomCode: null,
+  isHost: false,
+  grid: [],
+  wordPlacements: {}, // word -> [{r,c}]
+  foundWords: [],
+  foundCells: {}, // "r,c" -> colorIndex
+  timerInterval: null,
+  timerEnd: null,
+  selecting: false,
+  selStart: null,
+  selCells: [],
+  realtimeSub: null,
+  playersSub: null,
+  liveScores: {},
+  lastPlaySolo: false
+};
+
+// ===================================================
+// THEME
+// ===================================================
+function toggleTheme() {
+  const is = document.documentElement.getAttribute('data-theme') === 'light';
+  document.documentElement.setAttribute('data-theme', is ? '' : 'light');
+  localStorage.setItem('theme', is ? 'dark' : 'light');
+}
+(function() {
+  const t = localStorage.getItem('theme') || 'dark';
+  if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+})();
+
+// ===================================================
+// NAVIGATION
+// ===================================================
+function navigate(screen) {
+  const prev = state.screen;
+  state.screen = screen;
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + screen).classList.add('active');
+  history.pushState({ screen }, '', '#' + screen);
+  if (screen === 'global-lb') loadGlobalLB();
+}
+window.addEventListener('popstate', (e) => {
+  const s = (e.state && e.state.screen) || 'home';
+  state.screen = s;
+  document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('screen-' + s);
+  if (el) el.classList.add('active');
+});
+
+function sanitizeInput(el) {
+  el.value = el.value.replace(/[<>"'`]/g, '');
+}
+
+// ===================================================
+// TOAST
+// ===================================================
+let toastTimer;
+function showToast(msg, type = 'info', duration = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ''; }, duration);
+}
+
+// ===================================================
+// WORD FOUND POPUP
+// ===================================================
+function showWordPopup(word) {
+  const p = document.getElementById('word-popup');
+  p.textContent = word + ' ✓';
+  p.className = 'show';
+  setTimeout(() => { p.className = ''; }, 1300);
+}
+
+// ===================================================
+// GRID GENERATION
+// ===================================================
+function generateGrid(words) {
+  const size = GRID_SIZE;
+  const grid = Array.from({ length: size }, () => Array(size).fill(''));
+  const placements = {};
+  const shuffled = [...words].sort(() => Math.random() - 0.5);
+
+  for (const word of shuffled) {
+    let placed = false;
+    let attempts = 0;
+    while (!placed && attempts < 200) {
+      attempts++;
+      const dir = DIRECTIONS[Math.floor(Math.random() * DIRECTIONS.length)];
+      const [dr, dc] = dir;
+      const maxR = size - dr * (word.length - 1);
+      const maxC = size - dc * (word.length - 1);
+      const minR = -dr * (word.length - 1);
+      const minC = -dc * (word.length - 1);
+      const r = Math.floor(Math.random() * (Math.max(maxR, minR) - Math.min(maxR, minR) + size)) % size;
+      const c = Math.floor(Math.random() * size);
+
+      // Validate bounds
+      const cells = [];
+      let valid = true;
+      for (let i = 0; i < word.length; i++) {
+        const nr = r + dr * i;
+        const nc = c + dc * i;
+        if (nr < 0 || nr >= size || nc < 0 || nc >= size) { valid = false; break; }
+        const existing = grid[nr][nc];
+        if (existing !== '' && existing !== word[i]) { valid = false; break; }
+        cells.push([nr, nc]);
+      }
+      if (!valid) continue;
+
+      // Place
+      cells.forEach(([nr, nc], i) => { grid[nr][nc] = word[i]; });
+      placements[word] = cells.map(([nr, nc]) => ({ r: nr, c: nc }));
+      placed = true;
+    }
+  }
+
+  // Fill blanks
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  for (let r = 0; r < size; r++)
+    for (let c = 0; c < size; c++)
+      if (!grid[r][c]) grid[r][c] = letters[Math.floor(Math.random() * 26)];
+
+  return { grid, placements };
+}
+
+// ===================================================
+// RENDER GRID
+// ===================================================
+function renderGrid(grid) {
+  const el = document.getElementById('puzzle-grid');
+  el.style.gridTemplateColumns = `repeat(${grid[0].length}, var(--cell))`;
+  el.innerHTML = '';
+  for (let r = 0; r < grid.length; r++) {
+    for (let c = 0; c < grid[r].length; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.textContent = grid[r][c];
+      cell.dataset.r = r;
+      cell.dataset.c = c;
+      const key = r + ',' + c;
+      if (state.foundCells[key] !== undefined) {
+        cell.classList.add('found-' + (state.foundCells[key] % WORD_COLORS));
+      }
+      el.appendChild(cell);
+    }
+  }
+  attachGridEvents();
+}
+
+function renderWordChips(words) {
+  const el = document.getElementById('word-chip-list');
+  el.innerHTML = '';
+  words.forEach(w => {
+    const chip = document.createElement('div');
+    chip.className = 'word-chip' + (state.foundWords.includes(w) ? ' found' : '');
+    chip.id = 'chip-' + w;
+    chip.innerHTML = `<span class="check">✓</span>${w}`;
+    el.appendChild(chip);
+  });
+}
+
+// ===================================================
+// SELECTION LOGIC
+// ===================================================
+function attachGridEvents() {
+  const el = document.getElementById('puzzle-grid');
+  el.addEventListener('mousedown', onSelStart);
+  el.addEventListener('mouseover', onSelMove);
+  el.addEventListener('mouseup', onSelEnd);
+  el.addEventListener('touchstart', onTouchStart, { passive: false });
+  el.addEventListener('touchmove', onTouchMove, { passive: false });
+  el.addEventListener('touchend', onTouchEnd);
+}
+
+function cellFromEvent(e) {
+  const target = e.target.closest('.cell');
+  if (!target) return null;
+  return { r: parseInt(target.dataset.r), c: parseInt(target.dataset.c) };
+}
+function cellFromTouch(e) {
+  const touch = e.touches[0];
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  if (!el || !el.classList.contains('cell')) return null;
+  return { r: parseInt(el.dataset.r), c: parseInt(el.dataset.c) };
+}
+
+function onSelStart(e) {
+  if (e.button !== 0) return;
+  const cell = cellFromEvent(e);
+  if (!cell) return;
+  state.selecting = true;
+  state.selStart = cell;
+  state.selCells = [cell];
+  updateSelectionUI();
+}
+function onSelMove(e) {
+  if (!state.selecting) return;
+  const cell = cellFromEvent(e);
+  if (!cell) return;
+  computeSelection(cell);
+}
+function onSelEnd(e) {
+  if (!state.selecting) return;
+  state.selecting = false;
+  checkSelection();
+}
+function onTouchStart(e) {
+  e.preventDefault();
+  const cell = cellFromTouch(e);
+  if (!cell) return;
+  state.selecting = true;
+  state.selStart = cell;
+  state.selCells = [cell];
+  updateSelectionUI();
+}
+function onTouchMove(e) {
+  e.preventDefault();
+  if (!state.selecting) return;
+  const cell = cellFromTouch(e);
+  if (!cell) return;
+  computeSelection(cell);
+}
+function onTouchEnd() {
+  if (!state.selecting) return;
+  state.selecting = false;
+  checkSelection();
+}
+
+function computeSelection(end) {
+  const { r: r1, c: c1 } = state.selStart;
+  const { r: r2, c: c2 } = end;
+  const dr = r2 - r1, dc = c2 - c1;
+  const len = Math.max(Math.abs(dr), Math.abs(dc));
+  if (len === 0) { state.selCells = [state.selStart]; updateSelectionUI(); return; }
+
+  // Snap to nearest valid direction
+  let best = null, bestScore = -1;
+  for (const [ddr, ddc] of DIRECTIONS) {
+    const dot = dr * ddr + dc * ddc;
+    const norm = Math.sqrt((ddr * ddr + ddc * ddc) * (dr * dr + dc * dc));
+    const score = norm > 0 ? dot / norm : 0;
+    if (score > bestScore) { bestScore = score; best = [ddr, ddc]; }
+  }
+  const [bdr, bdc] = best;
+  const cells = [];
+  for (let i = 0; i <= len; i++) {
+    const nr = r1 + bdr * i, nc = c1 + bdc * i;
+    if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE)
+      cells.push({ r: nr, c: nc });
+  }
+  state.selCells = cells;
+  updateSelectionUI();
+}
+
+function updateSelectionUI() {
+  document.querySelectorAll('.cell.selecting').forEach(c => c.classList.remove('selecting'));
+  state.selCells.forEach(({ r, c }) => {
+    const el = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+    if (el) el.classList.add('selecting');
+  });
+}
+
+function checkSelection() {
+  document.querySelectorAll('.cell.selecting').forEach(c => c.classList.remove('selecting'));
+  if (state.selCells.length < 2) return;
+
+  const word = state.selCells.map(({ r, c }) => state.grid[r][c]).join('');
+  const wordRev = word.split('').reverse().join('');
+
+  for (const candidate of [word, wordRev]) {
+    if (WORD_LIST.includes(candidate) && !state.foundWords.includes(candidate)) {
+      wordFound(candidate);
+      return;
+    }
+  }
+  state.selCells = [];
+}
+
+function wordFound(word) {
+  const colorIdx = state.foundWords.length % WORD_COLORS;
+  state.foundWords.push(word);
+
+  // Mark cells
+  if (state.wordPlacements[word]) {
+    state.wordPlacements[word].forEach(({ r, c }) => {
+      const key = r + ',' + c;
+      state.foundCells[key] = colorIdx;
+      const cell = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+      if (cell) {
+        cell.classList.add('found-' + (colorIdx % WORD_COLORS), 'flash');
+        setTimeout(() => cell.classList.remove('flash'), 500);
+      }
+    });
+  }
+
+  // Update chip
+  const chip = document.getElementById('chip-' + word);
+  if (chip) chip.className = 'word-chip found';
+
+  // Update score
+  document.getElementById('score-display').textContent = state.foundWords.length;
+
+  showWordPopup(word);
+  showToast(word + ' found!', 'success');
+
+  if (state.mode === 'multi') {
+    syncPlayerScore();
+  }
+
+  // Check all found
+  if (state.foundWords.length === WORD_LIST.length) {
+    endGame('all-found');
+  }
+}
+
+// ===================================================
+// TIMER
+// ===================================================
+function startTimer(endTime) {
+  state.timerEnd = endTime;
+  clearInterval(state.timerInterval);
+  state.timerInterval = setInterval(tickTimer, 500);
+  tickTimer();
+}
+
+function tickTimer() {
+  const now = Date.now();
+  const remaining = Math.max(0, Math.floor((state.timerEnd - now) / 1000));
+  const m = Math.floor(remaining / 60);
+  const s = remaining % 60;
+  const el = document.getElementById('timer-display');
+  if (el) {
+    el.textContent = m + ':' + String(s).padStart(2, '0');
+    el.className = 'timer-val' + (remaining <= 30 ? ' urgent' : '');
+  }
+  if (remaining <= 0) {
+    clearInterval(state.timerInterval);
+    endGame('timeout');
+  }
+}
+
+// ===================================================
+// SOLO PLAY
+// ===================================================
+function startSolo() {
+  const name = document.getElementById('solo-name').value.trim();
+  if (!name) { showToast('Enter your name first', 'error'); return; }
+  state.playerName = name;
+  state.mode = 'solo';
+  state.foundWords = [];
+  state.foundCells = {};
+  state.lastPlaySolo = true;
+
+  const { grid, placements } = generateGrid(WORD_LIST);
+  state.grid = grid;
+  state.wordPlacements = placements;
+
+  navigate('game');
+  renderGrid(grid);
+  renderWordChips(WORD_LIST);
+  document.getElementById('live-players-panel').style.display = 'none';
+  document.getElementById('score-display').textContent = '0';
+
+  startTimer(Date.now() + GAME_DURATION * 1000);
+}
+
+// ===================================================
+// CREATE ROOM
+// ===================================================
+async function createRoom() {
+  const name = document.getElementById('host-name').value.trim();
+  if (!name) { showToast('Enter your name first', 'error'); return; }
+
+  const code = generateCode();
+  state.playerName = name;
+  state.isHost = true;
+
+  const { grid, placements } = generateGrid(WORD_LIST);
+  state.grid = grid;
+  state.wordPlacements = placements;
+
+  const { data: room, error } = await sb.from('wordpuzzle_rooms').insert({
+    room_code: code,
+    host_name: name,
+    status: 'waiting',
+    word_list: WORD_LIST,
+    grid: grid,
+    started_at: null,
+    ends_at: null
+  }).select().single();
+
+  if (error) { showToast('Could not create room. Try again.', 'error'); console.error(error); return; }
+
+  state.roomId = room.id;
+  state.roomCode = code;
+
+  const { data: player, error: pe } = await sb.from('wordpuzzle_players').insert({
+    room_id: room.id,
+    player_name: name,
+    words_found: []
+  }).select().single();
+
+  if (pe) { showToast('Error joining room', 'error'); return; }
+  state.playerId = player.id;
+
+  navigate('lobby');
+  document.getElementById('lobby-code').textContent = code;
+  document.getElementById('host-start-wrap').style.display = 'block';
+  document.getElementById('host-start-btn').disabled = true;
+  subscribeLobby();
+}
+
+function generateCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
+
+// ===================================================
+// JOIN ROOM
+// ===================================================
+async function joinRoom() {
+  const code = document.getElementById('join-code').value.trim().toUpperCase();
+  const name = document.getElementById('join-name').value.trim();
+  if (!code || code.length < 4) { showToast('Enter a 4-character room code', 'error'); return; }
+  if (!name) { showToast('Enter your name', 'error'); return; }
+
+  const { data: room, error } = await sb.from('wordpuzzle_rooms')
+    .select('*').eq('room_code', code).single();
+
+  if (error || !room) { showToast('Room not found', 'error'); return; }
+  if (room.status === 'finished') { showToast('That game already ended', 'error'); return; }
+  if (room.status === 'active') {
+    // Allow joining in-progress game
+    const timerLeft = room.ends_at ? new Date(room.ends_at).getTime() - Date.now() : 0;
+    if (timerLeft <= 0) { showToast('That game already ended', 'error'); return; }
+  }
+
+  // Check for duplicate name
+  const { data: existing } = await sb.from('wordpuzzle_players')
+    .select('id').eq('room_id', room.id).eq('player_name', name);
+  if (existing && existing.length > 0) {
+    showToast('Name already taken in this room', 'error'); return;
+  }
+
+  state.playerName = name;
+  state.isHost = false;
+  state.roomId = room.id;
+  state.roomCode = code;
+  state.grid = room.grid;
+  state.wordPlacements = buildPlacementsFromGrid(room.grid, room.word_list);
+
+  const { data: player, error: pe } = await sb.from('wordpuzzle_players').insert({
+    room_id: room.id,
+    player_name: name,
+    words_found: []
+  }).select().single();
+
+  if (pe) { showToast('Error joining room', 'error'); return; }
+  state.playerId = player.id;
+  state.foundWords = [];
+  state.foundCells = {};
+
+  if (room.status === 'active') {
+    // Jump straight into game
+    navigate('game');
+    renderGrid(state.grid);
+    renderWordChips(WORD_LIST);
+    document.getElementById('live-players-panel').style.display = 'block';
+    document.getElementById('score-display').textContent = '0';
+    startTimer(new Date(room.ends_at).getTime());
+    subscribeMultiGame();
+  } else {
+    navigate('lobby');
+    document.getElementById('lobby-code').textContent = code;
+    document.getElementById('host-start-wrap').style.display = 'none';
+    subscribeLobby();
+  }
+}
+
+// Rebuild placements by scanning the grid
+function buildPlacementsFromGrid(grid, words) {
+  const placements = {};
+  for (const word of words) {
+    outer: for (let r = 0; r < grid.length; r++) {
+      for (let c = 0; c < grid[r].length; c++) {
+        for (const [dr, dc] of DIRECTIONS) {
+          let cells = [];
+          let ok = true;
+          for (let i = 0; i < word.length; i++) {
+            const nr = r + dr * i, nc = c + dc * i;
+            if (nr < 0 || nr >= grid.length || nc < 0 || nc >= grid[0].length) { ok = false; break; }
+            if (grid[nr][nc] !== word[i]) { ok = false; break; }
+            cells.push({ r: nr, c: nc });
+          }
+          if (ok && cells.length === word.length) {
+            placements[word] = cells;
+            break outer;
+          }
+        }
+      }
+    }
+  }
+  return placements;
+}
+
+// ===================================================
+// LOBBY REALTIME
+// ===================================================
+function subscribeLobby() {
+  if (state.realtimeSub) state.realtimeSub.unsubscribe();
+
+  // Watch players joining
+  state.playersSub = sb.channel('lobby-' + state.roomId)
+    .on('postgres_changes', {
+      event: '*', schema: 'public', table: 'wordpuzzle_players',
+      filter: 'room_id=eq.' + state.roomId
+    }, () => { refreshLobbyPlayers(); })
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'wordpuzzle_rooms',
+      filter: 'id=eq.' + state.roomId
+    }, (payload) => {
+      if (payload.new.status === 'active') {
+        state.grid = payload.new.grid;
+        state.wordPlacements = buildPlacementsFromGrid(payload.new.grid, WORD_LIST);
+        launchMultiGame(new Date(payload.new.ends_at).getTime());
+      }
+    })
+    .subscribe();
+
+  refreshLobbyPlayers();
+}
+
+async function refreshLobbyPlayers() {
+  const { data } = await sb.from('wordpuzzle_players')
+    .select('*').eq('room_id', state.roomId).order('joined_at');
+  if (!data) return;
+
+  const list = document.getElementById('lobby-player-list');
+  list.innerHTML = '';
+  data.forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'player-item';
+    const isHost = p.player_name === (await getHostName());
+    row.innerHTML = `<span class="player-dot"></span>${p.player_name}${p.player_name === state.playerName ? ' <span class="live-you-badge">You</span>' : ''}${isHost ? '<span class="host-badge">Host</span>' : ''}`;
+    list.appendChild(row);
+  });
+
+  // Host can start with 2+ players
+  if (state.isHost) {
+    const btn = document.getElementById('host-start-btn');
+    if (btn) btn.disabled = data.length < 2;
+  }
+
+  document.getElementById('lobby-status-text').textContent =
+    data.length === 1 ? 'Waiting for players...' : data.length + ' players ready';
+}
+
+// Workaround for async in forEach
+async function getHostName() {
+  const { data } = await sb.from('wordpuzzle_rooms')
+    .select('host_name').eq('id', state.roomId).single();
+  return data ? data.host_name : '';
+}
+
+async function hostStartGame() {
+  const { data: players } = await sb.from('wordpuzzle_players')
+    .select('id').eq('room_id', state.roomId);
+  if (!players || players.length < 2) {
+    showToast('Need at least 2 players', 'error'); return;
+  }
+
+  const endsAt = new Date(Date.now() + GAME_DURATION * 1000).toISOString();
+  await sb.from('wordpuzzle_rooms').update({
+    status: 'active',
+    started_at: new Date().toISOString(),
+    ends_at: endsAt
+  }).eq('id', state.roomId);
+  // realtime will trigger launchMultiGame for all clients
+}
+
+function launchMultiGame(timerEndMs) {
+  if (state.playersSub) { state.playersSub.unsubscribe(); state.playersSub = null; }
+  state.mode = 'multi';
+  state.foundWords = [];
+  state.foundCells = {};
+  state.liveScores = {};
+  state.lastPlaySolo = false;
+
+  // Show countdown 3,2,1
+  showCountdown(3, () => {
+    navigate('game');
+    renderGrid(state.grid);
+    renderWordChips(WORD_LIST);
+    document.getElementById('live-players-panel').style.display = 'block';
+    document.getElementById('score-display').textContent = '0';
+    startTimer(timerEndMs);
+    subscribeMultiGame();
+  });
+}
+
+function showCountdown(n, cb) {
+  if (n <= 0) { cb(); return; }
+  const overlay = document.createElement('div');
+  overlay.className = 'countdown-overlay';
+  overlay.innerHTML = `<div class="countdown-num">${n}</div>`;
+  document.body.appendChild(overlay);
+  setTimeout(() => {
+    overlay.remove();
+    showCountdown(n - 1, cb);
+  }, 1000);
+}
+
+// ===================================================
+// MULTI GAME REALTIME
+// ===================================================
+function subscribeMultiGame() {
+  if (state.realtimeSub) state.realtimeSub.unsubscribe();
+  state.realtimeSub = sb.channel('game-' + state.roomId)
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'wordpuzzle_players',
+      filter: 'room_id=eq.' + state.roomId
+    }, () => { refreshLiveScores(); })
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'wordpuzzle_rooms',
+      filter: 'id=eq.' + state.roomId
+    }, (payload) => {
+      if (payload.new.status === 'finished') endGame('host-ended');
+    })
+    .subscribe();
+  refreshLiveScores();
+}
+
+async function refreshLiveScores() {
+  const { data } = await sb.from('wordpuzzle_players')
+    .select('*').eq('room_id', state.roomId).order('joined_at');
+  if (!data) return;
+  state.liveScores = {};
+  data.forEach(p => {
+    state.liveScores[p.player_name] = (p.words_found || []).length;
+  });
+  renderLiveScores();
+}
+
+function renderLiveScores() {
+  const list = document.getElementById('live-players-list');
+  if (!list) return;
+  const sorted = Object.entries(state.liveScores).sort((a, b) => b[1] - a[1]);
+  list.innerHTML = '';
+  sorted.forEach(([name, score]) => {
+    const row = document.createElement('div');
+    row.className = 'live-player-row';
+    row.innerHTML = `
+      <span class="live-player-name">${name}${name === state.playerName ? ' <span class="live-you-badge">You</span>' : ''}</span>
+      <span class="live-player-score">${score}</span>`;
+    list.appendChild(row);
+  });
+}
+
+async function syncPlayerScore() {
+  if (!state.playerId) return;
+  await sb.from('wordpuzzle_players').update({
+    words_found: state.foundWords,
+    finished_at: state.foundWords.length === WORD_LIST.length ? new Date().toISOString() : null
+  }).eq('id', state.playerId);
+}
+
+// ===================================================
+// LEAVE ROOM
+// ===================================================
+async function leaveRoom() {
+  if (state.playersSub) state.playersSub.unsubscribe();
+  if (state.realtimeSub) state.realtimeSub.unsubscribe();
+  if (state.playerId) {
+    await sb.from('wordpuzzle_players').delete().eq('id', state.playerId);
+  }
+  clearInterval(state.timerInterval);
+  state.roomId = null;
+  state.roomCode = null;
+  state.playerId = null;
+  state.isHost = false;
+  navigate('home');
+}
+
+function copyRoomCode() {
+  if (navigator.clipboard && state.roomCode) {
+    navigator.clipboard.writeText(state.roomCode);
+    showToast('Room code copied!', 'success');
+  }
+}
+
+// ===================================================
+// END GAME
+// ===================================================
+async function endGame(reason) {
+  clearInterval(state.timerInterval);
+  if (state.realtimeSub) { state.realtimeSub.unsubscribe(); state.realtimeSub = null; }
+
+  const elapsed = Math.floor((Date.now() - (state.timerEnd - GAME_DURATION * 1000)) / 1000);
+  const timeTaken = Math.min(elapsed, GAME_DURATION);
+
+  if (state.mode === 'solo') {
+    // Save to global leaderboard
+    await sb.from('wordpuzzle_scores').insert({
+      player_name: state.playerName,
+      words_found: state.foundWords.length,
+      time_taken: timeTaken,
+      word_list_week: WEEK_LABEL
+    });
+    showSoloLeaderboard(timeTaken);
+  } else {
+    // Final sync
+    await syncPlayerScore();
+    if (state.isHost) {
+      await sb.from('wordpuzzle_rooms').update({ status: 'finished' }).eq('id', state.roomId);
+    }
+    await showMultiLeaderboard();
+  }
+}
+
+async function showSoloLeaderboard(timeTaken) {
+  navigate('leaderboard');
+  document.getElementById('lb-title').textContent = 'Game Over!';
+  document.getElementById('lb-subtitle').textContent =
+    `You found ${state.foundWords.length} of ${WORD_LIST.length} words`;
+
+  // Load top 10 from global
+  const { data } = await sb.from('wordpuzzle_scores')
+    .select('*').eq('word_list_week', WEEK_LABEL)
+    .order('words_found', { ascending: false })
+    .order('time_taken', { ascending: true })
+    .limit(10);
+
+  renderLeaderboardRows(data || [], state.playerName);
+}
+
+async function showMultiLeaderboard() {
+  navigate('leaderboard');
+  document.getElementById('lb-title').textContent = 'Room Results!';
+  document.getElementById('lb-subtitle').textContent = 'Final standings';
+
+  const { data } = await sb.from('wordpuzzle_players')
+    .select('*').eq('room_id', state.roomId);
+
+  const sorted = (data || []).map(p => ({
+    player_name: p.player_name,
+    words_found: (p.words_found || []).length,
+    time_taken: p.finished_at
+      ? Math.floor((new Date(p.finished_at) - new Date(state.timerEnd - GAME_DURATION * 1000)) / 1000)
+      : GAME_DURATION
+  })).sort((a, b) => b.words_found - a.words_found || a.time_taken - b.time_taken);
+
+  renderLeaderboardRows(sorted, state.playerName);
+}
+
+function renderLeaderboardRows(rows, highlightName) {
+  const el = document.getElementById('lb-rows');
+  el.innerHTML = '';
+  if (!rows.length) {
+    el.innerHTML = '<div class="status-msg">No scores yet</div>';
+    return;
+  }
+  rows.forEach((row, i) => {
+    const rank = i + 1;
+    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+    const div = document.createElement('div');
+    div.className = 'lb-row rank-' + rank;
+    div.style.animationDelay = (i * 0.07) + 's';
+    const mins = Math.floor(row.time_taken / 60);
+    const secs = row.time_taken % 60;
+    const timeStr = mins + 'm ' + String(secs).padStart(2, '0') + 's';
+    div.innerHTML = `
+      <span class="lb-rank">${medal}</span>
+      <span class="lb-name">${row.player_name}${row.player_name === highlightName ? ' <span class="live-you-badge">You</span>' : ''}</span>
+      <div style="text-align:right">
+        <div class="lb-words">${row.words_found}</div>
+        <div class="lb-time">${timeStr}</div>
+      </div>`;
+    el.appendChild(div);
+  });
+}
+
+// ===================================================
+// GLOBAL LEADERBOARD
+// ===================================================
+async function loadGlobalLB() {
+  const el = document.getElementById('global-lb-rows');
+  el.innerHTML = '<div class="spinner"></div>';
+  const { data, error } = await sb.from('wordpuzzle_scores')
+    .select('*').eq('word_list_week', WEEK_LABEL)
+    .order('words_found', { ascending: false })
+    .order('time_taken', { ascending: true })
+    .limit(20);
+
+  if (error || !data || !data.length) {
+    el.innerHTML = '<div class="status-msg">No scores yet. Be the first!</div>';
+    return;
+  }
+  const fakeEl = { innerHTML: '' };
+  el.innerHTML = '';
+  data.forEach((row, i) => {
+    const rank = i + 1;
+    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+    const div = document.createElement('div');
+    div.className = 'lb-row rank-' + rank;
+    div.style.animationDelay = (i * 0.05) + 's';
+    const mins = Math.floor(row.time_taken / 60);
+    const secs = row.time_taken % 60;
+    div.innerHTML = `
+      <span class="lb-rank">${medal}</span>
+      <span class="lb-name">${row.player_name}</span>
+      <div style="text-align:right">
+        <div class="lb-words">${row.words_found}</div>
+        <div class="lb-time">${mins}m ${String(secs).padStart(2,'0')}s</div>
+      </div>`;
+    el.appendChild(div);
+  });
+}
+
+// ===================================================
+// PLAY AGAIN
+// ===================================================
+function playAgain() {
+  if (state.lastPlaySolo) {
+    navigate('solo-setup');
+  } else {
+    navigate('home');
+  }
+}
+
+// ===================================================
+// INIT
+// ===================================================
+window.addEventListener('DOMContentLoaded', () => {
+  const hash = location.hash.replace('#', '');
+  const safe = ['home','solo-setup','create-room','join-room','global-lb'];
+  if (hash && safe.includes(hash)) navigate(hash);
+  else navigate('home');
+});
+</script>
+</body>
+</html>
