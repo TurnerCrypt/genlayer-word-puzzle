@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>GenPuzzles</title>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <style>
 
 :root{
@@ -803,6 +802,7 @@ body::before{
 <div id="toast"></div>
 <div id="word-popup"></div>
 
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
 // =====================================================
 // CONFIG - UPDATE SERVER_URL AFTER DEPLOYING TO RENDER
@@ -851,12 +851,19 @@ let state = {
 function initSocket() {
   if (socket && socket.connected) return;
 
-  socket = io(SERVER_URL, {
-    transports: ['websocket','polling'],
-    reconnection: true,
-    reconnectionDelay: 1000,
-    reconnectionAttempts: 10
-  });
+  try {
+    socket = io(SERVER_URL, {
+      transports: ['websocket','polling'],
+      reconnection: true,
+      reconnectionDelay: 2000,
+      reconnectionAttempts: 15,
+      timeout: 20000
+    });
+  } catch(e) {
+    console.error('Socket init error:', e);
+    showToast('Could not connect to server. Retrying...', 'error');
+    return;
+  }
 
   socket.on('connect', () => {
     console.log('Socket connected:', socket.id);
@@ -1030,7 +1037,15 @@ function createRoom() {
   state.playerName = name;
   setLoading(true);
   initSocket();
-  socket.emit('create_room', { name });
+  // Wait for connection if not yet connected (server may be waking up)
+  if (!socket.connected) {
+    showToast('Waking up server... please wait', 'info', 8000);
+    socket.once('connect', () => {
+      socket.emit('create_room', { name });
+    });
+  } else {
+    socket.emit('create_room', { name });
+  }
 }
 
 function joinRoom() {
@@ -1041,7 +1056,14 @@ function joinRoom() {
   state.playerName = name;
   setLoading(true);
   initSocket();
-  socket.emit('join_room', { code, name });
+  if (!socket.connected) {
+    showToast('Waking up server... please wait', 'info', 8000);
+    socket.once('connect', () => {
+      socket.emit('join_room', { code, name });
+    });
+  } else {
+    socket.emit('join_room', { code, name });
+  }
 }
 
 function hostStartGame() {
@@ -1443,8 +1465,6 @@ window.addEventListener('DOMContentLoaded', () => {
   if (localStorage.getItem('theme') === 'light')
     document.documentElement.setAttribute('data-theme', 'light');
   navigate('home');
-  // Pre-connect socket so first room creation is instant
-  initSocket();
 });
 </script>
 </body>
