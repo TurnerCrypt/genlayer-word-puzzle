@@ -1512,9 +1512,11 @@ function renderLiveScores() {
 
 async function syncPlayerScore() {
   if (!state.playerId) return;
+  const now = new Date().toISOString();
   await sb.from('wordpuzzle_players').update({
     words_found: state.foundWords,
-    finished_at: state.foundWords.length === WORD_LIST.length ? new Date().toISOString() : null
+    finished_at: state.foundWords.length === WORD_LIST.length ? now : null,
+    last_word_at: state.foundWords.length > 0 ? now : null
   }).eq('id', state.playerId);
 }
 
@@ -1634,12 +1636,16 @@ async function showMultiLeaderboard() {
   const { data } = await sb.from('wordpuzzle_players')
     .select('*').eq('room_id', state.roomId);
 
+  const gameStart = state.timerEnd - GAME_DURATION * 1000;
   const sorted = (data || []).map(p => ({
     player_name: p.player_name,
     words_found: (p.words_found || []).length,
+    // Use last_word_at for tiebreak - whoever found their last word earliest ranks higher
     time_taken: p.finished_at
-      ? Math.floor((new Date(p.finished_at) - new Date(state.timerEnd - GAME_DURATION * 1000)) / 1000)
-      : GAME_DURATION
+      ? Math.floor((new Date(p.finished_at) - gameStart) / 1000)
+      : p.last_word_at
+        ? Math.floor((new Date(p.last_word_at) - gameStart) / 1000)
+        : GAME_DURATION
   })).sort((a, b) => b.words_found - a.words_found || a.time_taken - b.time_taken);
 
   // Now navigate and render
@@ -1659,20 +1665,32 @@ function renderLeaderboardRows(rows, highlightName) {
     el.innerHTML = '<div class="status-msg">No scores yet</div>';
     return;
   }
+  // Assign true ranks (tied players get same rank)
+  const ranked = [];
+  let currentRank = 1;
   rows.forEach((row, i) => {
-    const rank = i + 1;
-    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+    if (i > 0 && (row.words_found !== rows[i-1].words_found || row.time_taken !== rows[i-1].time_taken)) {
+      currentRank = i + 1;
+    }
+    ranked.push({ ...row, rank: currentRank });
+  });
+
+  ranked.forEach((row, i) => {
+    const r = row.rank;
+    const medal = r === 1 ? '🥇' : r === 2 ? '🥈' : r === 3 ? '🥉' : null;
+    const rankDisplay = medal ? medal : `<span style="font-size:16px;color:var(--text2)">#${r}</span>`;
     const div = document.createElement('div');
-    div.className = 'lb-row rank-' + rank;
+    div.className = 'lb-row' + (r <= 3 ? ' rank-' + r : '');
     div.style.animationDelay = (i * 0.07) + 's';
     const mins = Math.floor(row.time_taken / 60);
     const secs = row.time_taken % 60;
     const timeStr = mins + 'm ' + String(secs).padStart(2, '0') + 's';
+    const isYou = row.player_name === highlightName;
     div.innerHTML = `
-      <span class="lb-rank">${medal}</span>
-      <span class="lb-name">${row.player_name}${row.player_name === highlightName ? ' <span class="live-you-badge">You</span>' : ''}</span>
+      <span class="lb-rank">${rankDisplay}</span>
+      <span class="lb-name" style="${isYou ? 'color:var(--yellow)' : ''}">${row.player_name}${isYou ? ' <span class="live-you-badge">You</span>' : ''}</span>
       <div style="text-align:right">
-        <div class="lb-words">${row.words_found}</div>
+        <div class="lb-words">${row.words_found} <span style="font-size:11px;color:var(--text2);font-family:var(--font-b);font-weight:700">words</span></div>
         <div class="lb-time">${timeStr}</div>
       </div>`;
     el.appendChild(div);
