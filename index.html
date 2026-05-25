@@ -1411,11 +1411,17 @@ async function hostStartGame() {
     showToast('Need at least 2 players', 'error'); return;
   }
 
+  // Generate a FRESH grid at start time so every game is unique
+  const { grid, placements } = generateGrid(WORD_LIST);
+  state.grid = grid;
+  state.wordPlacements = placements;
+
   const endsAt = new Date(Date.now() + GAME_DURATION * 1000).toISOString();
   await sb.from('wordpuzzle_rooms').update({
     status: 'active',
     started_at: new Date().toISOString(),
-    ends_at: endsAt
+    ends_at: endsAt,
+    grid: grid
   }).eq('id', state.roomId);
   // realtime will trigger launchMultiGame for all clients
 }
@@ -1613,10 +1619,7 @@ async function endGame(reason) {
 }
 
 async function showMultiLeaderboard() {
-  navigate('leaderboard');
-  document.getElementById('lb-title').textContent = 'Room Results!';
-  document.getElementById('lb-subtitle').textContent = 'Final standings';
-
+  // Fetch scores FIRST before anything gets deleted
   const { data } = await sb.from('wordpuzzle_players')
     .select('*').eq('room_id', state.roomId);
 
@@ -1628,11 +1631,18 @@ async function showMultiLeaderboard() {
       : GAME_DURATION
   })).sort((a, b) => b.words_found - a.words_found || a.time_taken - b.time_taken);
 
+  // Now navigate and render
+  navigate('leaderboard');
+  const titleEl = document.getElementById('lb-title');
+  const subEl = document.getElementById('lb-subtitle');
+  if (titleEl) titleEl.textContent = 'Room Results!';
+  if (subEl) subEl.textContent = 'Final standings';
   renderLeaderboardRows(sorted, state.playerName);
 }
 
 function renderLeaderboardRows(rows, highlightName) {
   const el = document.getElementById('lb-rows');
+  if (!el) return;
   el.innerHTML = '';
   if (!rows.length) {
     el.innerHTML = '<div class="status-msg">No scores yet</div>';
@@ -1758,14 +1768,6 @@ async function restoreSession() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  const raw = sessionStorage.getItem('gp_session');
-  if (raw) {
-    restoreSession();
-  } else {
-    navigate('home');
-  }
-});
-</script>er('DOMContentLoaded', () => {
   const raw = sessionStorage.getItem('gp_session');
   if (raw) {
     restoreSession();
