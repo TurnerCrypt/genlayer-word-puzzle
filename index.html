@@ -907,6 +907,7 @@ function initSocket() {
 
   // Room events
   socket.on('room_created', onRoomCreated);
+  socket.on('player_reconnected', onPlayerReconnected);
   socket.on('reconnect_failed', () => {
     // Server didn't find us - room likely ended
     state.roomCode = null;
@@ -983,6 +984,45 @@ function onRoomJoined(data) {
     document.getElementById('lobby-code').textContent = data.code;
     document.getElementById('host-start-wrap').style.display = 'none';
     renderLobbyPlayers(data.players);
+  }
+}
+
+function onPlayerReconnected(data) {
+  state.roomCode = data.code;
+  state.isHost = data.isHost;
+  setLoading(false);
+
+  if (data.status === 'active') {
+    state.grid = data.grid;
+    state.wordPlacements = buildPlacements(data.grid, WORD_LIST);
+    // Keep existing foundWords/foundCells - don't reset
+    navigate('game');
+    renderGrid(state.grid);
+    renderWordChips(WORD_LIST);
+    // Re-mark found words
+    state.foundWords.forEach(w => {
+      const chip = document.getElementById('chip-' + w);
+      if (chip) chip.className = 'word-chip found';
+    });
+    document.getElementById('score-display').textContent = state.foundWords.length;
+    document.getElementById('live-players-panel').style.display = 'block';
+    document.getElementById('game-leave-btn').style.display = data.isHost ? 'none' : 'inline-flex';
+    document.getElementById('game-end-btn').style.display = data.isHost ? 'inline-flex' : 'none';
+    startTimer(data.endsAt);
+    renderLiveScores(data.players);
+  } else {
+    navigate('lobby');
+    document.getElementById('lobby-code').textContent = data.code;
+    renderLobbyPlayers(data.players);
+    const count = data.players.length;
+    document.getElementById('lobby-status-text').textContent = count + ' player' + (count !== 1 ? 's' : '') + ' ready';
+    if (data.isHost) {
+      document.getElementById('host-start-wrap').style.display = 'block';
+      const btn = document.getElementById('host-start-btn');
+      if (btn) btn.disabled = count < 2;
+    } else {
+      document.getElementById('host-start-wrap').style.display = 'none';
+    }
   }
 }
 
