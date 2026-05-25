@@ -1493,12 +1493,16 @@ async function refreshLobbyPlayers() {
     .select('*').eq('room_id', state.roomId).order('joined_at');
   if (!data) return;
 
+  const { data: roomData } = await sb.from('wordpuzzle_rooms')
+    .select('host_name').eq('id', state.roomId).single();
+  const hostName = roomData ? roomData.host_name : '';
+
   const list = document.getElementById('lobby-player-list');
   list.innerHTML = '';
   data.forEach(p => {
     const row = document.createElement('div');
     row.className = 'player-item';
-    const isHost = p.player_name === (await getHostName());
+    const isHost = p.player_name === hostName;
     row.innerHTML = `<span class="player-dot"></span>${p.player_name}${p.player_name === state.playerName ? ' <span class="live-you-badge">You</span>' : ''}${isHost ? '<span class="host-badge">Host</span>' : ''}`;
     list.appendChild(row);
   });
@@ -1511,13 +1515,6 @@ async function refreshLobbyPlayers() {
 
   document.getElementById('lobby-status-text').textContent =
     data.length === 1 ? 'Waiting for players...' : data.length + ' players ready';
-}
-
-// Workaround for async in forEach
-async function getHostName() {
-  const { data } = await sb.from('wordpuzzle_rooms')
-    .select('host_name').eq('id', state.roomId).single();
-  return data ? data.host_name : '';
 }
 
 async function hostStartGame() {
