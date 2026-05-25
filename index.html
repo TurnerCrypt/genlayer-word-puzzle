@@ -908,6 +908,7 @@ function initSocket() {
   // Room events
   socket.on('room_created', onRoomCreated);
   socket.on('player_reconnected', onPlayerReconnected);
+  socket.on('player_away', onPlayerAway);
   socket.on('reconnect_failed', () => {
     // Server didn't find us - room likely ended
     state.roomCode = null;
@@ -987,6 +988,12 @@ function onRoomJoined(data) {
   }
 }
 
+function onPlayerAway(data) {
+  // Player temporarily disconnected - update scores silently, no toast
+  if (state.screen === 'lobby') renderLobbyPlayers(data.players);
+  else if (state.screen === 'game') renderLiveScores(data.players);
+}
+
 function onPlayerReconnected(data) {
   state.roomCode = data.code;
   state.isHost = data.isHost;
@@ -1016,13 +1023,17 @@ function onPlayerReconnected(data) {
     renderLobbyPlayers(data.players);
     const count = data.players.length;
     document.getElementById('lobby-status-text').textContent = count + ' player' + (count !== 1 ? 's' : '') + ' ready';
-    if (data.isHost) {
-      document.getElementById('host-start-wrap').style.display = 'block';
+    // Use setTimeout to ensure DOM updates after navigate animation
+    setTimeout(() => {
+      const wrap = document.getElementById('host-start-wrap');
       const btn = document.getElementById('host-start-btn');
-      if (btn) btn.disabled = count < 2;
-    } else {
-      document.getElementById('host-start-wrap').style.display = 'none';
-    }
+      if (data.isHost) {
+        if (wrap) wrap.style.display = 'block';
+        if (btn) btn.disabled = count < 2;
+      } else {
+        if (wrap) wrap.style.display = 'none';
+      }
+    }, 100);
   }
 }
 
