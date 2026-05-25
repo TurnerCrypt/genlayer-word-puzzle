@@ -1470,6 +1470,14 @@ window.addEventListener('DOMContentLoaded', () => {
   if (localStorage.getItem('theme') === 'light')
     document.documentElement.setAttribute('data-theme', 'light');
   navigate('home');
+
+  // Keep server alive - ping every 3 minutes so Render never sleeps
+  setInterval(() => {
+    fetch(SERVER_URL + '/ping').catch(() => {});
+  }, 3 * 60 * 1000);
+
+  // Initial ping on load to wake server before user needs it
+  fetch(SERVER_URL + '/ping').catch(() => {});
 });
 </script>
 </body>
