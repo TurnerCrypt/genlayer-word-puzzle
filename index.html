@@ -1144,7 +1144,7 @@ async function createRoom() {
   const code = generateCode();
   // Check name not in use in any active or waiting room
   const { data: activeRooms2 } = await sb.from('wordpuzzle_rooms')
-    .select('id').in('status', ['waiting', 'active']);
+    .select('id').in('status', ['waiting']);
   const activeRoomIds2 = (activeRooms2 || []).map(r => r.id);
   if (activeRoomIds2.length > 0) {
     const { data: nameTaken2 } = await sb.from('wordpuzzle_players')
@@ -1220,7 +1220,7 @@ async function joinRoom() {
 
   // Check name is not in use in any active or waiting room
   const { data: activeRooms } = await sb.from('wordpuzzle_rooms')
-    .select('id').in('status', ['waiting', 'active']);
+    .select('id').in('status', ['waiting']);
   const activeRoomIds = (activeRooms || []).map(r => r.id);
   if (activeRoomIds.length > 0) {
     const { data: nameTaken } = await sb.from('wordpuzzle_players')
