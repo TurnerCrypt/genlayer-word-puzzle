@@ -1594,10 +1594,12 @@ async function endGameEarly() {
   if (state.realtimeSub) { state.realtimeSub.unsubscribe(); state.realtimeSub = null; }
   await syncPlayerScore();
   await sb.from('wordpuzzle_rooms').update({ status: 'finished' }).eq('id', state.roomId);
-  // Free all player names after game ends
-  await sb.from('wordpuzzle_players').delete().eq('room_id', state.roomId);
   sessionStorage.removeItem('gp_session');
   await showMultiLeaderboard();
+  // Delete players after leaderboard renders so non-hosts can still fetch scores
+  setTimeout(async () => {
+    await sb.from('wordpuzzle_players').delete().eq('room_id', state.roomId);
+  }, 8000);
 }
 
 async function endGame(reason) {
@@ -1607,15 +1609,24 @@ async function endGame(reason) {
   const elapsed = Math.floor((Date.now() - (state.timerEnd - GAME_DURATION * 1000)) / 1000);
   const timeTaken = Math.min(elapsed, GAME_DURATION);
 
-  // Final sync
+  // Final sync - make sure our score is saved
   await syncPlayerScore();
+
   if (state.isHost) {
+    // Host: fetch scores, show leaderboard, THEN clean up
     await sb.from('wordpuzzle_rooms').update({ status: 'finished' }).eq('id', state.roomId);
-    // Free all player names so they can rejoin new rooms
-    await sb.from('wordpuzzle_players').delete().eq('room_id', state.roomId);
+    sessionStorage.removeItem('gp_session');
+    await showMultiLeaderboard();
+    // Delete players AFTER leaderboard is shown so non-hosts can still fetch
+    setTimeout(async () => {
+      await sb.from('wordpuzzle_players').delete().eq('room_id', state.roomId);
+    }, 8000);
+  } else {
+    // Non-host: wait briefly for all scores to sync, then show leaderboard
+    sessionStorage.removeItem('gp_session');
+    await new Promise(r => setTimeout(r, 1200));
+    await showMultiLeaderboard();
   }
-  sessionStorage.removeItem('gp_session');
-  await showMultiLeaderboard();
 }
 
 async function showMultiLeaderboard() {
