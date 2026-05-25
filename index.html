@@ -772,12 +772,10 @@ const DIRECTIONS = [
   [1,1],[1,-1],[-1,1],[-1,-1]
 ];
 const WORD_LIST = [
-  'CONSENSUS','VALIDATOR','INTELLIGENT','CONTRACT','GENLAYER',
-  'LEADER','EQUIVALENT','NONDET','CALLDATA','TESTNET',
-  'BRADBURY','RECEIPT','FINALIZED','ACCEPTED','TREEMAP',
-  'PYTHON','STAKING','PREMIUM','OPTIMISTIC','DEMOCRACY',
-  'DELEGATED','APPEAL','GENVM','ROLLUP','ORACLE',
-  'SANDBOX','WEBHOOK','PROMPT','VOTING','DISPATCH'
+  'CONSENSUS','VALIDATOR','GENLAYER','CONTRACT','TESTNET',
+  'BRADBURY','FINALIZED','ACCEPTED','PYTHON','STAKING',
+  'OPTIMISTIC','DELEGATED','APPEAL','GENVM','ORACLE',
+  'SANDBOX','WEBHOOK','VOTING','ROLLUP','DISPATCH'
 ];
 const WORD_COLORS = 8;
 
@@ -1026,23 +1024,28 @@ function computeSelection(end) {
   const { r: r1, c: c1 } = state.selStart;
   const { r: r2, c: c2 } = end;
   const dr = r2 - r1, dc = c2 - c1;
-  const len = Math.max(Math.abs(dr), Math.abs(dc));
-  if (len === 0) { state.selCells = [state.selStart]; updateSelectionUI(); return; }
+  if (dr === 0 && dc === 0) { state.selCells = [state.selStart]; updateSelectionUI(); return; }
 
-  // Snap to nearest valid direction
+  // Snap to nearest valid direction using dot product
   let best = null, bestScore = -1;
   for (const [ddr, ddc] of DIRECTIONS) {
     const dot = dr * ddr + dc * ddc;
+    if (dot <= 0) continue;
     const norm = Math.sqrt((ddr * ddr + ddc * ddc) * (dr * dr + dc * dc));
     const score = norm > 0 ? dot / norm : 0;
     if (score > bestScore) { bestScore = score; best = [ddr, ddc]; }
   }
+  if (!best) { state.selCells = [state.selStart]; updateSelectionUI(); return; }
+
   const [bdr, bdc] = best;
+  // Extend as far as the drag distance goes in the snapped direction
+  const len = Math.round(Math.max(Math.abs(dr), Math.abs(dc)));
   const cells = [];
   for (let i = 0; i <= len; i++) {
     const nr = r1 + bdr * i, nc = c1 + bdc * i;
     if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE)
       cells.push({ r: nr, c: nc });
+    else break;
   }
   state.selCells = cells;
   updateSelectionUI();
@@ -1690,40 +1693,6 @@ async function restoreSession() {
     const endBtn = document.getElementById('game-end-btn');
     if (leaveBtn) leaveBtn.style.display = sess.isHost ? 'none' : 'inline-flex';
     if (endBtn) endBtn.style.display = sess.isHost ? 'inline-flex' : 'none';
-    startTimer(timerEnd);
-    subscribeMultiGame();
-    return;
-  }
-
-  navigate('home');
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-  const raw = sessionStorage.getItem('gp_session');
-  if (raw) {
-    restoreSession();
-  } else {
-    navigate('home');
-  }
-});
-</script>status === 'active') {
-    const timerEnd = new Date(room.ends_at).getTime();
-    if (timerEnd <= Date.now()) {
-      sessionStorage.removeItem('gp_session');
-      navigate('home');
-      return;
-    }
-    state.mode = 'multi';
-    navigate('game');
-    renderGrid(state.grid);
-    renderWordChips(WORD_LIST);
-    // Re-mark already-found words
-    state.foundWords.forEach(w => {
-      const chip = document.getElementById('chip-' + w);
-      if (chip) chip.className = 'word-chip found';
-    });
-    document.getElementById('score-display').textContent = state.foundWords.length;
-    document.getElementById('live-players-panel').style.display = 'block';
     startTimer(timerEnd);
     subscribeMultiGame();
     return;
