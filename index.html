@@ -729,6 +729,7 @@ body::before{
         <div id="host-start-wrap" style="display:none">
           <button class="btn btn-yellow btn-lg" onclick="hostStartGame()" id="host-start-btn">&#128640; Start Game</button>
           <div class="host-start-note">Need at least 2 players to start</div>
+          <button class="btn btn-ghost btn-sm" onclick="leaveRoom()" style="margin-top:10px;border-color:rgba(255,95,109,0.3);color:#ff5f6d">&#10005; End Room</button>
         </div>
       </div>
     </div>
@@ -758,7 +759,32 @@ body::before{
       <div class="word-list-grid" id="word-chip-list"></div>
     </div>
     <div class="live-panel" id="live-players-panel" style="display:none">
- <script>
+      <div class="live-panel-title">Live Scores</div>
+      <div id="live-players-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LEADERBOARD ===== -->
+<div id="screen-leaderboard" class="screen">
+  <div class="page-wrap">
+    <div class="topbar">
+      <button class="back-btn" onclick="navigate('home')">&#8592; Home</button>
+      <span class="page-logo">GenPuzzles</span>
+    </div>
+    <div class="lb-page">
+      <div class="lb-trophy">&#127942;</div>
+      <div class="lb-title" id="lb-title">Game Over!</div>
+      <div class="lb-subtitle" id="lb-subtitle">Final Results</div>
+      <div class="lb-rows" id="lb-rows"></div>
+      <div class="lb-actions">
+        <button class="btn btn-yellow btn-sm" onclick="playAgain()">Play Again</button>
+        <button cl
+
+<div id="toast"></div>
+<div id="word-popup"></div>
+
+<script>
 // ===================================================
 // CONFIG
 // ===================================================
@@ -849,6 +875,7 @@ function sanitizeInput(el) {
 let toastTimer;
 function showToast(msg, type = 'info', duration = 2500) {
   const t = document.getElementById('toast');
+  if (!t) { console.warn('Toast:', msg); return; }
   t.textContent = msg;
   t.className = 'show ' + type;
   clearTimeout(toastTimer);
@@ -860,6 +887,7 @@ function showToast(msg, type = 'info', duration = 2500) {
 // ===================================================
 function showWordPopup(word) {
   const p = document.getElementById('word-popup');
+  if (!p) return;
   p.textContent = word + ' ✓';
   p.className = 'show';
   setTimeout(() => { p.className = ''; }, 1300);
@@ -1491,7 +1519,11 @@ async function leaveRoom() {
   if (state.lobbyPollInterval) { clearInterval(state.lobbyPollInterval); state.lobbyPollInterval = null; }
   if (state.playersSub) { state.playersSub.unsubscribe(); state.playersSub = null; }
   if (state.realtimeSub) { state.realtimeSub.unsubscribe(); state.realtimeSub = null; }
-  if (state.playerId) {
+  if (state.isHost && state.roomId) {
+    // Host leaving: delete all players and close room so all names are freed
+    await sb.from('wordpuzzle_players').delete().eq('room_id', state.roomId);
+    await sb.from('wordpuzzle_rooms').update({ status: 'finished' }).eq('id', state.roomId);
+  } else if (state.playerId) {
     await sb.from('wordpuzzle_players').delete().eq('id', state.playerId);
   }
   clearInterval(state.timerInterval);
@@ -1514,6 +1546,26 @@ function copyRoomCode() {
 // ===================================================
 // END GAME
 // ===================================================
+async function endRoom() {
+  // Host closes the room entirely - frees all player names
+  if (!state.roomId) return;
+  clearInterval(state.timerInterval);
+  if (state.lobbyPollInterval) { clearInterval(state.lobbyPollInterval); state.lobbyPollInterval = null; }
+  if (state.realtimeSub) { state.realtimeSub.unsubscribe(); state.realtimeSub = null; }
+  if (state.playersSub) { state.playersSub.unsubscribe(); state.playersSub = null; }
+  // Delete all players so their names are freed
+  await sb.from('wordpuzzle_players').delete().eq('room_id', state.roomId);
+  // Mark room finished
+  await sb.from('wordpuzzle_rooms').update({ status: 'finished' }).eq('id', state.roomId);
+  state.roomId = null;
+  state.roomCode = null;
+  state.playerId = null;
+  state.isHost = false;
+  state.launching = false;
+  sessionStorage.removeItem('gp_session');
+  navigate('home');
+}
+
 async function leaveGame() {
   // Non-host leaves mid-game
   clearInterval(state.timerInterval);
@@ -1536,6 +1588,8 @@ async function endGameEarly() {
   if (state.realtimeSub) { state.realtimeSub.unsubscribe(); state.realtimeSub = null; }
   await syncPlayerScore();
   await sb.from('wordpuzzle_rooms').update({ status: 'finished' }).eq('id', state.roomId);
+  // Free all player names after game ends
+  await sb.from('wordpuzzle_players').delete().eq('room_id', state.roomId);
   sessionStorage.removeItem('gp_session');
   await showMultiLeaderboard();
 }
@@ -1551,6 +1605,8 @@ async function endGame(reason) {
   await syncPlayerScore();
   if (state.isHost) {
     await sb.from('wordpuzzle_rooms').update({ status: 'finished' }).eq('id', state.roomId);
+    // Free all player names so they can rejoin new rooms
+    await sb.from('wordpuzzle_players').delete().eq('room_id', state.roomId);
   }
   sessionStorage.removeItem('gp_session');
   await showMultiLeaderboard();
@@ -1702,6 +1758,14 @@ async function restoreSession() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+  const raw = sessionStorage.getItem('gp_session');
+  if (raw) {
+    restoreSession();
+  } else {
+    navigate('home');
+  }
+});
+</script>er('DOMContentLoaded', () => {
   const raw = sessionStorage.getItem('gp_session');
   if (raw) {
     restoreSession();
