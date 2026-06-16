@@ -14,15 +14,112 @@
   --purple:#9333ea;
   --green:#84cc16;
   --cyan:#22d3ee;
+  --text:#fff;
   --text2:#777;
   --border:rgba(255,255,255,0.09);
+  --card-bg:rgba(14,14,14,0.94);
+  --cell-bg:rgba(255,255,255,0.04);
   --font-d:'Black Han Sans',cursive;
   --font-b:'Nunito',sans-serif;
   --cell:36px;
   --radius:20px;
 }
+
+/* ===================== LIGHT THEME ===================== */
+[data-theme="light"]{
+  --bg:#f7f7f5;
+  --bg2:#ececea;
+  --text:#111;
+  --text2:#666;
+  --border:rgba(0,0,0,0.1);
+  --card-bg:rgba(255,255,255,0.92);
+  --cell-bg:rgba(0,0,0,0.035);
+}
+[data-theme="light"] body::before{
+  background-image:linear-gradient(rgba(0,0,0,0.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,0,0,0.035) 1px,transparent 1px);
+}
+[data-theme="light"] .logo-text{
+  color:#111;
+  text-shadow:3px 3px 0 rgba(0,0,0,0.12),0 0 40px rgba(0,0,0,0.04);
+}
+[data-theme="light"] .cell{ color:#222; }
+[data-theme="light"] .cell:hover{ background:rgba(0,0,0,0.06); color:#000; }
+[data-theme="light"] .word-chip{ color:#555; }
+[data-theme="light"] .speech-bubble{ box-shadow:0 6px 24px rgba(0,0,0,0.15); }
+[data-theme="light"] .theme-toggle-btn{
+  background:rgba(0,0,0,0.06);
+  border-color:rgba(0,0,0,0.12);
+}
+[data-theme="light"] .theme-toggle-btn svg{ stroke:#111; }
+[data-theme="light"] .mode-hero-title,
+[data-theme="light"] .form-card-title,
+[data-theme="light"] .lobby-card-title,
+[data-theme="light"] .game-brand,
+[data-theme="light"] .timer-val,
+[data-theme="light"] .score-pill,
+[data-theme="light"] .lb-name{ color:#111; }
+[data-theme="light"] .form-card,
+[data-theme="light"] .lobby-card{
+  background:rgba(255,255,255,0.92);
+  box-shadow:0 24px 64px rgba(0,0,0,0.08);
+}
+[data-theme="light"] .input{
+  background:rgba(0,0,0,0.04);
+  color:#111;
+}
+[data-theme="light"] .input::placeholder{ color:#999; }
+[data-theme="light"] .mode-card,
+[data-theme="light"] .word-panel,
+[data-theme="light"] .live-panel,
+[data-theme="light"] .lb-row{
+  background:rgba(255,255,255,0.7);
+}
+[data-theme="light"] .player-list{
+  background:rgba(0,0,0,0.03);
+}
+[data-theme="light"] .toast,
+[data-theme="light"] #toast{
+  background:#fff;
+  color:#111;
+  box-shadow:0 8px 24px rgba(0,0,0,0.15);
+}
+
+/* ===================== THEME TOGGLE BUTTON ===================== */
+.theme-toggle-btn{
+  position:fixed;
+  top:16px;right:16px;
+  z-index:1000;
+  width:42px;height:42px;
+  border-radius:50%;
+  background:rgba(255,255,255,0.06);
+  border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  transition:transform 0.2s,background 0.2s;
+}
+.theme-toggle-btn:hover{ transform:scale(1.08); }
+.theme-toggle-btn:active{ transform:scale(0.94); }
+.theme-toggle-btn svg{
+  width:20px;height:20px;
+  stroke:#fff;
+  fill:none;
+  stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  transition:stroke 0.2s;
+}
+.theme-toggle-btn .icon-sun{ display:none; }
+.theme-toggle-btn .icon-moon{ display:block; }
+[data-theme="light"] .theme-toggle-btn .icon-sun{ display:block; }
+[data-theme="light"] .theme-toggle-btn .icon-moon{ display:none; }
+@media(max-width:600px){
+  .theme-toggle-btn{ top:10px;right:10px;width:38px;height:38px; }
+  .theme-toggle-btn svg{ width:18px;height:18px; }
+}
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:var(--font-b);background:var(--bg);color:#fff;overflow-x:hidden}
+html,body{height:100%;font-family:var(--font-b);background:var(--bg);color:var(--text);overflow-x:hidden;transition:background 0.25s,color 0.25s}
 
 /* grid bg on all screens */
 body::before{
@@ -597,6 +694,10 @@ body::before{
 </style>
 </head>
 <body>
+<button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle light/dark mode" type="button">
+  <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+</button>
 <div id="conn-status" class="conn-status"></div>
 <div id="app">
 
