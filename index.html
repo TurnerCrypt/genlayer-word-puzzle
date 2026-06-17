@@ -1091,7 +1091,15 @@ function onRoomJoined(data) {
 
 function onPlayerAway(data) {
   // Player temporarily disconnected - update scores silently, no toast
-  if (state.screen === 'lobby') renderLobbyPlayers(data.players);
+  if (state.screen === 'lobby') {
+    renderLobbyPlayers(data.players);
+    const count = data.players.length;
+    document.getElementById('lobby-status-text').textContent = count + ' player' + (count !== 1 ? 's' : '') + ' ready';
+    if (state.isHost) {
+      const btn = document.getElementById('host-start-btn');
+      if (btn) btn.disabled = count < 2;
+    }
+  }
   else if (state.screen === 'game') renderLiveScores(data.players);
 }
 
