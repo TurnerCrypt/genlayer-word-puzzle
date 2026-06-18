@@ -1204,6 +1204,10 @@ function onGameStarted(data) {
   if (state.launching) return;
   state.launching = true;
   state.grid = data.grid;
+  // Compute clock offset: positive means server clock is ahead of client clock.
+  // We apply this when displaying remaining time so the timer always shows the
+  // correct value regardless of device clock differences.
+  state.clockOffset = data.serverNow ? (data.serverNow - Date.now()) : 0;
   state.wordPlacements = buildPlacements(data.grid, WORD_LIST);
   state.foundWords = [];
   state.foundCells = {};
@@ -1527,7 +1531,7 @@ function startTimer(endsAt) {
 }
 
 function tickTimer() {
-  const remaining = Math.max(0, Math.floor((state.timerEnd - Date.now()) / 1000));
+  const remaining = Math.max(0, Math.floor((state.timerEnd - Date.now() - (state.clockOffset || 0)) / 1000));
   const m = Math.floor(remaining / 60), s = remaining % 60;
   const el = document.getElementById('timer-display');
   if (el) {
