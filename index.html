@@ -623,17 +623,27 @@ body::before{
   position:fixed;top:50%;left:50%;
   transform:translate(-50%,-50%) scale(0);
   background:var(--yellow);color:#111;
-  padding:11px 28px;border-radius:50px;
-  font-family:var(--font-d);font-size:24px;
+  padding:16px 24px;border-radius:16px;
+  width:min(320px,88vw);text-align:center;
+  font-family:var(--font-d);
   z-index:9998;pointer-events:none;
-  box-shadow:0 8px 32px rgba(240,224,64,0.4);
+  box-shadow:0 8px 40px rgba(240,224,64,0.45);
 }
-#word-popup.show{animation:popupAnim 1.2s ease forwards}
+#word-popup .wp-word{
+  font-size:22px;font-weight:700;letter-spacing:1px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin-bottom:6px;
+}
+#word-popup .wp-def{
+  font-family:var(--font-m);font-size:13px;
+  color:#333;line-height:1.4;
+}
+#word-popup.show{animation:popupAnim 2.4s ease forwards}
 @keyframes popupAnim{
-  0%{transform:translate(-50%,-50%) scale(0);opacity:1}
-  30%{transform:translate(-50%,-58%) scale(1);opacity:1}
-  70%{transform:translate(-50%,-68%) scale(1);opacity:1}
-  100%{transform:translate(-50%,-78%) scale(0.85);opacity:0}
+  0%  {transform:translate(-50%,-50%) scale(0);opacity:0}
+  12% {transform:translate(-50%,-52%) scale(1);opacity:1}
+  70% {transform:translate(-50%,-52%) scale(1);opacity:1}
+  100%{transform:translate(-50%,-60%) scale(0.9);opacity:0}
 }
 
 .countdown-overlay{
@@ -909,6 +919,29 @@ body::before{
 // CONFIG - UPDATE SERVER_URL AFTER DEPLOYING TO RENDER
 // =====================================================
 const SERVER_URL = 'https://genpuzzles-server.onrender.com';
+
+const WORD_DEFINITIONS = {
+  CONSENSUS:  'Agreement among GenLayer validators on a smart contract result',
+  VALIDATOR:  'A node that executes and votes on Intelligent Contract outcomes',
+  GENLAYER:   'The blockchain platform that brings AI natively into smart contracts',
+  CONTRACT:   'A self-executing agreement deployed on the GenLayer network',
+  TESTNET:    'A test blockchain environment used before mainnet deployment',
+  BRADBURY:   'GenLayer\'s current public testnet, named after Ray Bradbury',
+  FINALIZED:  'A transaction state meaning validators reached permanent agreement',
+  ACCEPTED:   'A transaction state where a result is approved but not yet final',
+  PYTHON:     'The language used to write GenLayer Intelligent Contracts',
+  STAKING:    'Locking tokens as collateral to participate in network validation',
+  OPTIMISTIC: 'GenLayer\'s execution model - assume results correct, appeal if not',
+  DELEGATED:  'Assigning your stake or voting power to another validator',
+  APPEAL:     'Challenging a contract result by escalating to more validators',
+  GENVM:      'The virtual machine that runs GenLayer Intelligent Contracts',
+  ORACLE:     'A system that brings real-world data onto the blockchain',
+  SANDBOX:    'An isolated environment for safely testing contracts',
+  WEBHOOK:    'An HTTP callback that notifies your app of on-chain events',
+  VOTING:     'The process validators use to agree on a contract execution result',
+  ROLLUP:     'A Layer 2 scaling solution that batches transactions off-chain',
+  DISPATCH:   'Sending a transaction to the GenLayer network for execution'
+};
 
 const WORD_LIST = [
   'CONSENSUS','VALIDATOR','GENLAYER','CONTRACT','TESTNET',
@@ -1597,9 +1630,12 @@ function showToast(msg, type = 'info', duration = 2500) {
 function showWordPopup(word) {
   const p = document.getElementById('word-popup');
   if (!p) return;
-  p.textContent = word + ' ✓';
+  const def = WORD_DEFINITIONS[word] || '';
+  p.innerHTML =
+    '<div class="wp-word">' + word + ' <span>&#10003;</span></div>' +
+    (def ? '<div class="wp-def">' + def + '</div>' : '');
   p.className = 'show';
-  setTimeout(() => { p.className = ''; }, 1300);
+  setTimeout(() => { p.className = ''; }, 2500);
 }
 
 // =====================================================
