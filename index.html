@@ -903,6 +903,7 @@ body::before{
       <div class="lb-rows" id="lb-rows"></div>
       <div class="lb-actions">
         <button class="btn btn-yellow btn-sm" onclick="playAgain()">Play Again</button>
+        <button id="lb-download-btn" class="btn btn-ghost btn-sm" onclick="downloadResults()" style="display:none">&#11015; Download Results</button>
         <button class="btn btn-ghost btn-sm" onclick="navigate('home')">Home</button>
       </div>
     </div>
@@ -1558,11 +1559,44 @@ function renderLiveScores(players) {
 // =====================================================
 function showLeaderboard(finalScores, reason) {
   navigate('leaderboard');
+  state.finalScores = finalScores;
   const titleEl = document.getElementById('lb-title');
   const subEl = document.getElementById('lb-subtitle');
   if (titleEl) titleEl.textContent = reason === 'timeout' ? "Time's Up!" : 'Game Over!';
   if (subEl) subEl.textContent = 'Final Results';
   renderLeaderboardRows(finalScores);
+  const dlBtn = document.getElementById('lb-download-btn');
+  if (dlBtn) dlBtn.style.display = state.isHost ? 'inline-flex' : 'none';
+}
+
+function downloadResults() {
+  const rows = state.finalScores;
+  if (!rows || !rows.length) return;
+
+  let currentRank = 1;
+  const ranked = rows.map((row, i) => {
+    if (i > 0 && (row.wordsFound !== rows[i-1].wordsFound || row.timeTaken !== rows[i-1].timeTaken)) currentRank = i + 1;
+    return { ...row, rank: currentRank };
+  });
+
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0, 10);
+  const timeStr = now.toTimeString().slice(0, 5).replace(':', '-');
+
+  let csv = 'Rank,Player,Words Found,Time Taken\n';
+  ranked.forEach(row => {
+    const mins = Math.floor(row.timeTaken / 60);
+    const secs = String(row.timeTaken % 60).padStart(2, '0');
+    csv += `${row.rank},"${row.name}",${row.wordsFound},${mins}m ${secs}s\n`;
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `genpuzzles-results-${dateStr}-${timeStr}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function renderLeaderboardRows(rows) {
