@@ -623,12 +623,14 @@ body::before{
   position:fixed;top:50%;left:50%;
   transform:translate(-50%,-50%) scale(0);
   background:var(--yellow);color:#111;
-  padding:16px 24px;border-radius:16px;
+  padding:16px 24px 14px;border-radius:16px;
   width:min(320px,88vw);text-align:center;
   font-family:var(--font-d);
   z-index:9998;pointer-events:none;
   box-shadow:0 8px 40px rgba(240,224,64,0.45);
+  position:fixed;
 }
+#word-popup.show{pointer-events:auto;animation:popupAnim 2.4s ease forwards}
 #word-popup .wp-word{
   font-size:22px;font-weight:700;letter-spacing:1px;
   display:flex;align-items:center;justify-content:center;gap:8px;
@@ -636,9 +638,14 @@ body::before{
 }
 #word-popup .wp-def{
   font-family:var(--font-m);font-size:13px;
-  color:#333;line-height:1.4;
+  color:#333;line-height:1.4;margin-bottom:10px;
 }
-#word-popup.show{animation:popupAnim 2.4s ease forwards}
+#word-popup .wp-close{
+  position:absolute;top:8px;right:10px;
+  background:none;border:none;cursor:pointer;
+  font-size:16px;color:#555;line-height:1;padding:2px 4px;
+}
+#word-popup .wp-close:hover{color:#111;}
 @keyframes popupAnim{
   0%  {transform:translate(-50%,-50%) scale(0);opacity:0}
   12% {transform:translate(-50%,-52%) scale(1);opacity:1}
@@ -1665,15 +1672,24 @@ function showToast(msg, type = 'info', duration = 2500) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { t.className = ''; }, duration);
 }
+let _wpTimer = null;
 function showWordPopup(word) {
   const p = document.getElementById('word-popup');
   if (!p) return;
+  if (_wpTimer) { clearTimeout(_wpTimer); _wpTimer = null; }
   const def = WORD_DEFINITIONS[word] || '';
+  p.style.position = 'fixed';
   p.innerHTML =
+    '<button class="wp-close" onclick="closeWordPopup()" title="Close">&times;</button>' +
     '<div class="wp-word">' + word + ' <span>&#10003;</span></div>' +
     (def ? '<div class="wp-def">' + def + '</div>' : '');
   p.className = 'show';
-  setTimeout(() => { p.className = ''; }, 2500);
+  _wpTimer = setTimeout(() => closeWordPopup(), 2500);
+}
+function closeWordPopup() {
+  if (_wpTimer) { clearTimeout(_wpTimer); _wpTimer = null; }
+  const p = document.getElementById('word-popup');
+  if (p) p.className = '';
 }
 
 // =====================================================
