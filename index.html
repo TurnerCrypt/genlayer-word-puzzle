@@ -708,6 +708,66 @@ body::before{
 }
 .conn-status.show { display:block; }
 .conn-status.ok { background:rgba(74,222,128,0.12);border-color:rgba(74,222,128,0.3);color:#4ade80; }
+
+/* =====================================================
+   COMPLETION CARD
+   ===================================================== */
+#completion-card {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0,0,0,0.70);
+  align-items: center;
+  justify-content: center;
+}
+#completion-card.show { display: flex; }
+.comp-inner {
+  background: var(--card);
+  border: 2px solid var(--yellow);
+  border-radius: 20px;
+  padding: 32px 28px 28px;
+  text-align: center;
+  width: min(340px, 90vw);
+  box-shadow: 0 12px 48px rgba(240,224,64,0.3);
+  animation: compPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+@keyframes compPop {
+  from { transform: scale(0.6); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+.comp-trophy { font-size: 52px; line-height: 1; margin-bottom: 8px; }
+.comp-title  {
+  font-family: var(--font-d);
+  font-size: 26px;
+  color: var(--yellow);
+  margin-bottom: 4px;
+}
+.comp-subtitle {
+  font-family: var(--font-m);
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 18px;
+}
+.comp-time {
+  font-family: var(--font-d);
+  font-size: 42px;
+  color: var(--text);
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+.comp-rank {
+  font-family: var(--font-m);
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 22px;
+}
+.comp-waiting {
+  font-family: var(--font-m);
+  font-size: 13px;
+  color: var(--text-muted);
+  opacity: 0.8;
+}
 </style>
 </head>
 <body>
@@ -922,6 +982,7 @@ body::before{
 <div id="word-popup"></div>
 
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 <script>
 // =====================================================
 // CONFIG - UPDATE SERVER_URL AFTER DEPLOYING TO RENDER
@@ -1227,6 +1288,7 @@ function onGameStarted(data) {
     document.getElementById('score-display').textContent = '0';
     document.getElementById('game-leave-btn').style.display = state.isHost ? 'none' : 'inline-flex';
     document.getElementById('game-end-btn').style.display = state.isHost ? 'inline-flex' : 'none';
+    state.gameStartTime = Date.now() + (state.clockOffset || 0);
     startTimer(data.endsAt);
     renderLiveScores(data.players);
   });
@@ -1525,6 +1587,10 @@ function wordFound(word) {
   showToast(word + ' found!', 'success');
   // Tell server
   if (socket) socket.emit('word_found', { word });
+  // Check if all words found
+  if (state.foundWords.length === WORD_LIST.length) {
+    showCompletionCard();
+  }
 }
 
 // =====================================================
@@ -1554,6 +1620,7 @@ function tickTimer() {
 function renderLiveScores(players) {
   const list = document.getElementById('live-players-list');
   if (!list) return;
+  state.liveScores = players; // keep for completion card rank
   const sorted = [...players].sort((a, b) => b.wordsFound - a.wordsFound);
   list.innerHTML = '<div class="live-players-inner"></div>';
   const inner = list.querySelector('.live-players-inner');
@@ -1569,6 +1636,7 @@ function renderLiveScores(players) {
 // LEADERBOARD
 // =====================================================
 function showLeaderboard(finalScores, reason) {
+  hideCompletionCard();
   navigate('leaderboard');
   state.finalScores = finalScores;
   const titleEl = document.getElementById('lb-title');
@@ -1692,6 +1760,44 @@ function closeWordPopup() {
   if (p) p.className = '';
 }
 
+
+// =====================================================
+// COMPLETION CARD
+// =====================================================
+function showCompletionCard() {
+  // Calculate elapsed time
+  const elapsed = Math.floor(((Date.now() + (state.clockOffset || 0)) - (state.gameStartTime || 0)) / 1000);
+  const m = Math.floor(elapsed / 60);
+  const s = elapsed % 60;
+  const timeStr = m + ':' + String(s).padStart(2, '0');
+
+  // Rank among finishers (players who have found all words)
+  const finishers = (state.liveScores || []).filter(p => p.wordsFound >= WORD_LIST.length);
+  const myRank = finishers.length; // 1-indexed: we are the latest to finish
+  const rankText = finishers.length <= 1
+    ? '🥇 First to finish!'
+    : `#${finishers.length} to finish`;
+
+  document.getElementById('comp-time').textContent = timeStr;
+  document.getElementById('comp-rank').textContent = rankText;
+  document.getElementById('completion-card').classList.add('show');
+
+  // Confetti burst
+  if (typeof confetti === 'function') {
+    confetti({ particleCount: 140, spread: 80, origin: { y: 0.5 }, colors: ['#f0e040', '#ffffff', '#6ee7b7', '#60a5fa'] });
+    setTimeout(() => confetti({ particleCount: 80, spread: 120, origin: { y: 0.4 }, angle: 60,  colors: ['#f0e040', '#ffffff', '#f472b6'] }), 300);
+    setTimeout(() => confetti({ particleCount: 80, spread: 120, origin: { y: 0.4 }, angle: 120, colors: ['#f0e040', '#ffffff', '#a78bfa'] }), 600);
+  }
+
+  // Hide the card when game ends (leaderboard shows for everyone)
+  state._completionShown = true;
+}
+
+function hideCompletionCard() {
+  document.getElementById('completion-card').classList.remove('show');
+  state._completionShown = false;
+}
+
 // =====================================================
 // THEME
 // =====================================================
@@ -1754,5 +1860,18 @@ window.addEventListener('DOMContentLoaded', () => {
   fetch(SERVER_URL + '/ping').catch(() => {});
 });
 </script>
+
+<!-- Completion Card -->
+<div id="completion-card">
+  <div class="comp-inner">
+    <div class="comp-trophy">🏆</div>
+    <div class="comp-title">Puzzle Complete!</div>
+    <div class="comp-subtitle">You found all 20 words</div>
+    <div class="comp-time" id="comp-time">0:00</div>
+    <div class="comp-rank" id="comp-rank"></div>
+    <div class="comp-waiting">⏳ Waiting for time to expire…</div>
+  </div>
+</div>
+
 </body>
 </html>
