@@ -1071,9 +1071,15 @@ function initSocket() {
     console.log('Socket connected:', socket.id);
     showConnStatus('Connected', true);
     setTimeout(() => hideConnStatus(), 2000);
-    // If we were in a room, try to reconnect
-    if (state.roomCode && state.playerName) {
-      socket.emit('reconnect_player', { name: state.playerName, code: state.roomCode });
+    // Try in-memory state first, then fall back to localStorage
+    // (localStorage survives mobile suspension / page reload)
+    const roomCode = state.roomCode || localStorage.getItem('gp_room');
+    const playerName = state.playerName || localStorage.getItem('gp_name');
+    if (roomCode && playerName) {
+      if (!state.roomCode) state.roomCode = roomCode;
+      if (!state.playerName) state.playerName = playerName;
+      if (!state.isHost) state.isHost = localStorage.getItem('gp_host') === '1';
+      socket.emit('reconnect_player', { name: playerName, code: roomCode });
     }
   });
 
@@ -1134,6 +1140,7 @@ function setLoading(on) {
 function onRoomCreated(data) {
   state.roomCode = data.code;
   state.isHost = true;
+  localStorage.setItem('gp_room', data.code);
   setLoading(false);
   navigate('lobby');
   document.getElementById('lobby-code').textContent = data.code;
@@ -1145,6 +1152,7 @@ function onRoomCreated(data) {
 function onRoomJoined(data) {
   state.roomCode = data.code;
   state.isHost = false;
+  localStorage.setItem('gp_room', data.code);
   setLoading(false);
 
   if (data.status === 'active') {
@@ -1183,6 +1191,7 @@ function onPlayerAway(data) {
 function onPlayerReconnected(data) {
   state.roomCode = data.code;
   state.isHost = data.isHost;
+  localStorage.setItem('gp_room', data.code);
   setLoading(false);
 
   if (data.status === 'active') {
@@ -1304,6 +1313,8 @@ function createRoom() {
   const name = document.getElementById('host-name').value.trim();
   if (!name) { showToast('Enter your name first', 'error'); return; }
   state.playerName = name;
+  localStorage.setItem('gp_name', name);
+  localStorage.setItem('gp_host', '1');
   setLoading(true);
   initSocket();
   emitWhenReady('create_room', { name });
@@ -1315,6 +1326,8 @@ function joinRoom() {
   if (!code || code.length < 4) { showToast('Enter a 4-character room code', 'error'); return; }
   if (!name) { showToast('Enter your name', 'error'); return; }
   state.playerName = name;
+  localStorage.setItem('gp_name', name);
+  localStorage.setItem('gp_host', '0');
   setLoading(true);
   initSocket();
   emitWhenReady('join_room', { code, name });
@@ -1358,6 +1371,9 @@ function copyRoomCode() {
 
 function resetState() {
   clearInterval(state.timerInterval);
+  localStorage.removeItem('gp_room');
+  localStorage.removeItem('gp_name');
+  localStorage.removeItem('gp_host');
   state.roomCode = null;
   state.isHost = false;
   state.foundWords = [];
