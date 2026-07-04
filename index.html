@@ -623,34 +623,17 @@ body::before{
   position:fixed;top:50%;left:50%;
   transform:translate(-50%,-50%) scale(0);
   background:var(--yellow);color:#111;
-  padding:16px 24px 14px;border-radius:16px;
-  width:min(320px,88vw);text-align:center;
-  font-family:var(--font-d);
+  padding:11px 28px;border-radius:50px;
+  font-family:var(--font-d);font-size:24px;
   z-index:9998;pointer-events:none;
-  box-shadow:0 8px 40px rgba(240,224,64,0.45);
-  position:fixed;
+  box-shadow:0 8px 32px rgba(240,224,64,0.4);
 }
-#word-popup.show{pointer-events:auto;animation:popupAnim 2.4s ease forwards}
-#word-popup .wp-word{
-  font-size:22px;font-weight:700;letter-spacing:1px;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  margin-bottom:6px;
-}
-#word-popup .wp-def{
-  font-family:var(--font-m);font-size:13px;
-  color:#333;line-height:1.4;margin-bottom:10px;
-}
-#word-popup .wp-close{
-  position:absolute;top:8px;right:10px;
-  background:none;border:none;cursor:pointer;
-  font-size:16px;color:#555;line-height:1;padding:2px 4px;
-}
-#word-popup .wp-close:hover{color:#111;}
+#word-popup.show{animation:popupAnim 1.2s ease forwards}
 @keyframes popupAnim{
-  0%  {transform:translate(-50%,-50%) scale(0);opacity:0}
-  12% {transform:translate(-50%,-52%) scale(1);opacity:1}
-  70% {transform:translate(-50%,-52%) scale(1);opacity:1}
-  100%{transform:translate(-50%,-60%) scale(0.9);opacity:0}
+  0%{transform:translate(-50%,-50%) scale(0);opacity:1}
+  30%{transform:translate(-50%,-58%) scale(1);opacity:1}
+  70%{transform:translate(-50%,-68%) scale(1);opacity:1}
+  100%{transform:translate(-50%,-78%) scale(0.85);opacity:0}
 }
 
 .countdown-overlay{
@@ -709,65 +692,61 @@ body::before{
 .conn-status.show { display:block; }
 .conn-status.ok { background:rgba(74,222,128,0.12);border-color:rgba(74,222,128,0.3);color:#4ade80; }
 
-/* =====================================================
-   COMPLETION CARD
-   ===================================================== */
-#completion-card {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 10000;
-  background: rgba(0,0,0,0.70);
-  align-items: center;
-  justify-content: center;
+#word-popup{
+  position:fixed;top:50%;left:50%;
+  transform:translate(-50%,-50%) scale(0);
+  background:var(--yellow);color:#111;
+  padding:16px 24px 14px;border-radius:16px;
+  width:min(320px,88vw);text-align:center;
+  font-family:var(--font-d);
+  z-index:9998;pointer-events:none;
+  box-shadow:0 8px 40px rgba(240,224,64,0.45);
 }
-#completion-card.show { display: flex; }
-.comp-inner {
-  background: var(--card);
-  border: 2px solid var(--yellow);
-  border-radius: 20px;
-  padding: 32px 28px 28px;
-  text-align: center;
-  width: min(340px, 90vw);
-  box-shadow: 0 12px 48px rgba(240,224,64,0.3);
-  animation: compPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+#word-popup.show{pointer-events:auto;animation:popupAnim 2.4s ease forwards}
+#word-popup .wp-word{
+  font-size:22px;font-weight:700;letter-spacing:1px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin-bottom:6px;
 }
-@keyframes compPop {
-  from { transform: scale(0.6); opacity: 0; }
-  to   { transform: scale(1);   opacity: 1; }
+#word-popup .wp-def{
+  font-family:var(--font-m);font-size:13px;
+  color:#333;line-height:1.4;margin-bottom:10px;
 }
-.comp-trophy { font-size: 52px; line-height: 1; margin-bottom: 8px; }
-.comp-title  {
-  font-family: var(--font-d);
-  font-size: 26px;
-  color: var(--yellow);
-  margin-bottom: 4px;
+#word-popup .wp-close{
+  position:absolute;top:8px;right:10px;
+  background:none;border:none;cursor:pointer;
+  font-size:16px;color:#555;line-height:1;padding:2px 4px;
 }
-.comp-subtitle {
-  font-family: var(--font-m);
-  font-size: 14px;
-  color: var(--text-muted);
-  margin-bottom: 18px;
+#word-popup .wp-close:hover{color:#111;}
+@keyframes popupAnim{
+  0%  {transform:translate(-50%,-50%) scale(0);opacity:0}
+  12% {transform:translate(-50%,-52%) scale(1);opacity:1}
+  70% {transform:translate(-50%,-52%) scale(1);opacity:1}
+  100%{transform:translate(-50%,-60%) scale(0.9);opacity:0}
 }
-.comp-time {
-  font-family: var(--font-d);
-  font-size: 42px;
-  color: var(--text);
-  letter-spacing: 2px;
-  margin-bottom: 6px;
+#completion-card{
+  display:none;position:fixed;inset:0;z-index:10000;
+  background:rgba(0,0,0,0.70);
+  align-items:center;justify-content:center;
 }
-.comp-rank {
-  font-family: var(--font-m);
-  font-size: 14px;
-  color: var(--text-muted);
-  margin-bottom: 22px;
+#completion-card.show{display:flex;}
+.comp-inner{
+  background:var(--card);border:2px solid var(--yellow);
+  border-radius:20px;padding:32px 28px 28px;
+  text-align:center;width:min(340px,90vw);
+  box-shadow:0 12px 48px rgba(240,224,64,0.3);
+  animation:compPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
 }
-.comp-waiting {
-  font-family: var(--font-m);
-  font-size: 13px;
-  color: var(--text-muted);
-  opacity: 0.8;
+@keyframes compPop{
+  from{transform:scale(0.6);opacity:0}
+  to{transform:scale(1);opacity:1}
 }
+.comp-trophy{font-size:52px;line-height:1;margin-bottom:8px;}
+.comp-title{font-family:var(--font-d);font-size:26px;color:var(--yellow);margin-bottom:4px;}
+.comp-subtitle{font-family:var(--font-m);font-size:14px;color:var(--text-muted);margin-bottom:18px;}
+.comp-time{font-family:var(--font-d);font-size:42px;color:var(--text);letter-spacing:2px;margin-bottom:6px;}
+.comp-rank{font-family:var(--font-m);font-size:14px;color:var(--text-muted);margin-bottom:22px;}
+.comp-waiting{font-family:var(--font-m);font-size:13px;color:var(--text-muted);opacity:0.8;}
 </style>
 </head>
 <body>
@@ -990,33 +969,33 @@ body::before{
 const SERVER_URL = 'https://genpuzzles-server.onrender.com';
 
 const WORD_DEFINITIONS = {
-  CONSENSUS:  'Agreement among GenLayer validators on a smart contract result',
-  VALIDATOR:  'A node that executes and votes on Intelligent Contract outcomes',
-  GENLAYER:   'The blockchain platform that brings AI natively into smart contracts',
-  CONTRACT:   'A self-executing agreement deployed on the GenLayer network',
-  TESTNET:    'A test blockchain environment used before mainnet deployment',
-  BRADBURY:   'GenLayer\'s current public testnet, named after Ray Bradbury',
-  FINALIZED:  'A transaction state meaning validators reached permanent agreement',
-  ACCEPTED:   'A transaction state where a result is approved but not yet final',
-  PYTHON:     'The language used to write GenLayer Intelligent Contracts',
-  STAKING:    'Locking tokens as collateral to participate in network validation',
-  OPTIMISTIC: 'GenLayer\'s execution model - assume results correct, appeal if not',
-  DELEGATED:  'Assigning your stake or voting power to another validator',
-  APPEAL:     'Challenging a contract result by escalating to more validators',
-  GENVM:      'The virtual machine that runs GenLayer Intelligent Contracts',
-  ORACLE:     'A system that brings real-world data onto the blockchain',
-  SANDBOX:    'An isolated environment for safely testing contracts',
-  WEBHOOK:    'An HTTP callback that notifies your app of on-chain events',
-  VOTING:     'The process validators use to agree on a contract execution result',
-  ROLLUP:     'A Layer 2 scaling solution that batches transactions off-chain',
-  DISPATCH:   'Sending a transaction to the GenLayer network for execution'
+  ADJUDICATE:    'To make an official decision about a dispute after considering the facts and evidence',
+  UNHARDCODED:   'Open source routing for AI models, built by GenLayer Labs',
+  NEUROCREATIVE: 'A team-assigned role for consistent quality content creators in the GenLayer community',
+  SINGULARITY:   "GenLayer's highest community role for members who consistently go above and beyond",
+  INTERNETCOURT: 'Dispute resolution for the agent economy, built on GenLayer',
+  ARGUEDOTFUN:   'The first argumentation market, built on Base and powered by GenLayer',
+  GENLAYERLABS:  'The research and engineering lab building the GenLayer protocol',
+  FUDMARKETS:    'The social layer for crypto conviction, built on Base and powered by GenLayer',
+  AGENTICERA:    'The era in which AI systems act as autonomous agents rather than just responding to prompts',
+  SYNAPSE:       'Level 16 community role in GenLayer Discord with additional requirements and perks',
+  RALLY:         'The future of decentralized marketing, powered by GenLayer',
+  GENFRENS:      'The name for members of the GenLayer community',
+  ONCHAIN:       'An action, transaction, or data recorded directly on a blockchain',
+  MOLECULE:      'Level one assigned role in the GenLayer Discord community',
+  BRAIN:         'Level 32 assigned role in GenLayer Discord with additional requirements and perks',
+  WINGSTON:      "Rally's official NFT collection",
+  POAP:          'Proof of Attendance Protocol — a token that proves you were at an event',
+  GENTV:         'The section on the GenLayer portal holding live and recorded streams from the team and community',
+  GENNEWS:       'Latest announcements from the GenLayer ecosystem, found on the GenLayer portal',
+  XP:            'Earned through high-quality content, spreading the word, and major community events — not chat activity'
 };
 
 const WORD_LIST = [
-  'CONSENSUS','VALIDATOR','GENLAYER','CONTRACT','TESTNET',
-  'BRADBURY','FINALIZED','ACCEPTED','PYTHON','STAKING',
-  'OPTIMISTIC','DELEGATED','APPEAL','GENVM','ORACLE',
-  'SANDBOX','WEBHOOK','VOTING','ROLLUP','DISPATCH'
+  'ADJUDICATE','UNHARDCODED','NEUROCREATIVE','SINGULARITY',
+  'INTERNETCOURT','ARGUEDOTFUN','GENLAYERLABS','FUDMARKETS',
+  'AGENTICERA','SYNAPSE','RALLY','GENFRENS','ONCHAIN',
+  'MOLECULE','BRAIN','WINGSTON','POAP','GENTV','GENNEWS','XP'
 ];
 const GRID_SIZE = 15;
 const GAME_DURATION = 300;
@@ -1192,15 +1171,11 @@ function onRoomJoined(data) {
 }
 
 function onPlayerAway(data) {
-  // Player temporarily disconnected - update scores silently, no toast
   if (state.screen === 'lobby') {
     renderLobbyPlayers(data.players);
     const count = data.players.length;
     document.getElementById('lobby-status-text').textContent = count + ' player' + (count !== 1 ? 's' : '') + ' ready';
-    if (state.isHost) {
-      const btn = document.getElementById('host-start-btn');
-      if (btn) btn.disabled = count < 2;
-    }
+    if (state.isHost) { const btn = document.getElementById('host-start-btn'); if (btn) btn.disabled = count < 2; }
   }
   else if (state.screen === 'game') renderLiveScores(data.players);
 }
@@ -1272,9 +1247,6 @@ function onGameStarted(data) {
   if (state.launching) return;
   state.launching = true;
   state.grid = data.grid;
-  // Compute clock offset: positive means server clock is ahead of client clock.
-  // We apply this when displaying remaining time so the timer always shows the
-  // correct value regardless of device clock differences.
   state.clockOffset = data.serverNow ? (data.serverNow - Date.now()) : 0;
   state.wordPlacements = buildPlacements(data.grid, WORD_LIST);
   state.foundWords = [];
@@ -1587,10 +1559,7 @@ function wordFound(word) {
   showToast(word + ' found!', 'success');
   // Tell server
   if (socket) socket.emit('word_found', { word });
-  // Check if all words found
-  if (state.foundWords.length === WORD_LIST.length) {
-    showCompletionCard();
-  }
+  if (state.foundWords.length === WORD_LIST.length) showCompletionCard();
 }
 
 // =====================================================
@@ -1604,7 +1573,7 @@ function startTimer(endsAt) {
 }
 
 function tickTimer() {
-  const remaining = Math.max(0, Math.floor((state.timerEnd - Date.now() - (state.clockOffset || 0)) / 1000));
+  const remaining = Math.max(0, Math.floor((state.timerEnd - Date.now()) / 1000));
   const m = Math.floor(remaining / 60), s = remaining % 60;
   const el = document.getElementById('timer-display');
   if (el) {
@@ -1620,7 +1589,7 @@ function tickTimer() {
 function renderLiveScores(players) {
   const list = document.getElementById('live-players-list');
   if (!list) return;
-  state.liveScores = players; // keep for completion card rank
+  state.liveScores = players;
   const sorted = [...players].sort((a, b) => b.wordsFound - a.wordsFound);
   list.innerHTML = '<div class="live-players-inner"></div>';
   const inner = list.querySelector('.live-players-inner');
@@ -1651,30 +1620,24 @@ function showLeaderboard(finalScores, reason) {
 function downloadResults() {
   const rows = state.finalScores;
   if (!rows || !rows.length) return;
-
   let currentRank = 1;
   const ranked = rows.map((row, i) => {
-    if (i > 0 && (row.wordsFound !== rows[i-1].wordsFound || row.timeTaken !== rows[i-1].timeTaken)) currentRank = i + 1;
+    if (i > 0 && row.wordsFound !== rows[i-1].wordsFound) currentRank = i + 1;
     return { ...row, rank: currentRank };
   });
-
   const now = new Date();
   const dateStr = now.toISOString().slice(0, 10);
   const timeStr = now.toTimeString().slice(0, 5).replace(':', '-');
-
   let csv = 'Rank,Player,Words Found,Time Taken\n';
   ranked.forEach(row => {
-    const mins = Math.floor(row.timeTaken / 60);
-    const secs = String(row.timeTaken % 60).padStart(2, '0');
+    const mins = Math.floor((row.timeTaken || 0) / 60);
+    const secs = String((row.timeTaken || 0) % 60).padStart(2, '0');
     csv += `${row.rank},"${row.name}",${row.wordsFound},${mins}m ${secs}s\n`;
   });
-
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
-  a.download = `genpuzzles-results-${dateStr}-${timeStr}.csv`;
-  a.click();
+  a.href = url; a.download = `genpuzzles-results-${dateStr}-${timeStr}.csv`; a.click();
   URL.revokeObjectURL(url);
 }
 
@@ -1746,7 +1709,6 @@ function showWordPopup(word) {
   if (!p) return;
   if (_wpTimer) { clearTimeout(_wpTimer); _wpTimer = null; }
   const def = WORD_DEFINITIONS[word] || '';
-  p.style.position = 'fixed';
   p.innerHTML =
     '<button class="wp-close" onclick="closeWordPopup()" title="Close">&times;</button>' +
     '<div class="wp-word">' + word + ' <span>&#10003;</span></div>' +
@@ -1758,44 +1720,6 @@ function closeWordPopup() {
   if (_wpTimer) { clearTimeout(_wpTimer); _wpTimer = null; }
   const p = document.getElementById('word-popup');
   if (p) p.className = '';
-}
-
-
-// =====================================================
-// COMPLETION CARD
-// =====================================================
-function showCompletionCard() {
-  // Calculate elapsed time
-  const elapsed = Math.floor(((Date.now() + (state.clockOffset || 0)) - (state.gameStartTime || 0)) / 1000);
-  const m = Math.floor(elapsed / 60);
-  const s = elapsed % 60;
-  const timeStr = m + ':' + String(s).padStart(2, '0');
-
-  // Rank among finishers (players who have found all words)
-  const finishers = (state.liveScores || []).filter(p => p.wordsFound >= WORD_LIST.length);
-  const myRank = finishers.length; // 1-indexed: we are the latest to finish
-  const rankText = finishers.length <= 1
-    ? '🥇 First to finish!'
-    : `#${finishers.length} to finish`;
-
-  document.getElementById('comp-time').textContent = timeStr;
-  document.getElementById('comp-rank').textContent = rankText;
-  document.getElementById('completion-card').classList.add('show');
-
-  // Confetti burst
-  if (typeof confetti === 'function') {
-    confetti({ particleCount: 140, spread: 80, origin: { y: 0.5 }, colors: ['#f0e040', '#ffffff', '#6ee7b7', '#60a5fa'] });
-    setTimeout(() => confetti({ particleCount: 80, spread: 120, origin: { y: 0.4 }, angle: 60,  colors: ['#f0e040', '#ffffff', '#f472b6'] }), 300);
-    setTimeout(() => confetti({ particleCount: 80, spread: 120, origin: { y: 0.4 }, angle: 120, colors: ['#f0e040', '#ffffff', '#a78bfa'] }), 600);
-  }
-
-  // Hide the card when game ends (leaderboard shows for everyone)
-  state._completionShown = true;
-}
-
-function hideCompletionCard() {
-  document.getElementById('completion-card').classList.remove('show');
-  state._completionShown = false;
 }
 
 // =====================================================
@@ -1861,7 +1785,6 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-<!-- Completion Card -->
 <div id="completion-card">
   <div class="comp-inner">
     <div class="comp-trophy">🏆</div>
@@ -1872,6 +1795,24 @@ window.addEventListener('DOMContentLoaded', () => {
     <div class="comp-waiting">⏳ Waiting for time to expire…</div>
   </div>
 </div>
+<script>
+function showCompletionCard() {
+  const elapsed = Math.floor(((Date.now() + (state.clockOffset || 0)) - (state.gameStartTime || 0)) / 1000);
+  const m = Math.floor(elapsed / 60), s = elapsed % 60;
+  document.getElementById('comp-time').textContent = m + ':' + String(s).padStart(2,'0');
+  const finishers = (state.liveScores || []).filter(p => p.wordsFound >= WORD_LIST.length);
+  document.getElementById('comp-rank').textContent = finishers.length <= 1 ? '🥇 First to finish!' : '#' + finishers.length + ' to finish';
+  document.getElementById('completion-card').classList.add('show');
+  if (typeof confetti === 'function') {
+    confetti({particleCount:140,spread:80,origin:{y:0.5},colors:['#f0e040','#ffffff','#6ee7b7','#60a5fa']});
+    setTimeout(()=>confetti({particleCount:80,spread:120,origin:{y:0.4},angle:60,colors:['#f0e040','#ffffff','#f472b6']}),300);
+    setTimeout(()=>confetti({particleCount:80,spread:120,origin:{y:0.4},angle:120,colors:['#f0e040','#ffffff','#a78bfa']}),600);
+  }
+}
+function hideCompletionCard() {
+  document.getElementById('completion-card').classList.remove('show');
+}
+</script>
 
 </body>
 </html>
