@@ -1899,7 +1899,7 @@ function showCompletionCard() {
   const m = Math.floor(elapsed / 60), s = elapsed % 60;
   document.getElementById('comp-time').textContent = m + ':' + String(s).padStart(2,'0');
   const finishers = (state.liveScores || []).filter(p => p.wordsFound >= WORD_LIST.length);
-  document.getElementById('comp-rank').textContent = finishers.length <= 1 ? '🥇 First to finish!' : '#' + finishers.length + ' to finish';
+  document.getElementById('comp-rank').textContent = finishers.length === 0 ? '🥇 First to finish!' : '#' + (finishers.length + 1) + ' to finish';
   document.getElementById('completion-card').classList.add('show');
   if (typeof confetti === 'function') {
     confetti({particleCount:140,spread:80,origin:{y:0.5},colors:['#f0e040','#ffffff','#6ee7b7','#60a5fa']});
