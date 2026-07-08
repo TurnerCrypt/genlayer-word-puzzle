@@ -830,6 +830,9 @@ body::before{
     <button id="lock-unlock-btn" onclick="tryUnlock()">Unlock</button>
   </div>
   <button class="lock-open-btn" onclick="showLockForm()">🔑 Host access</button>
+  <button id="open-for-all-btn" onclick="openForEveryone()" style="display:none;margin-top:16px;background:none;border:1.5px solid var(--yellow);color:var(--yellow);border-radius:8px;padding:10px 22px;font-family:var(--font-m);font-size:14px;cursor:pointer;">
+    🌍 Open game for everyone
+  </button>
 </div>
 
 <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle light/dark mode" type="button">
@@ -1920,9 +1923,20 @@ function hideCompletionCard() {
 const LOCK_PASSWORD = 'genpuzzles2025';  // change this anytime
 const LOCK_KEY = 'gp_unlocked';
 
+const PUBLIC_UNLOCK_KEY = 'gp_public_open';
+
 function checkLock() {
+  // Public unlock — host opened for everyone
+  if (localStorage.getItem(PUBLIC_UNLOCK_KEY) === '1') {
+    document.getElementById('lock-screen').style.display = 'none';
+    return;
+  }
+  // Host personal unlock
   if (localStorage.getItem(LOCK_KEY) === LOCK_PASSWORD) {
     document.getElementById('lock-screen').style.display = 'none';
+    // Show the open-for-all button so host can unlock for everyone
+    const btn = document.getElementById('open-for-all-btn');
+    if (btn) btn.style.display = 'inline-block';
   }
 }
 
@@ -1938,6 +1952,9 @@ function tryUnlock() {
   if (input.value === LOCK_PASSWORD) {
     localStorage.setItem(LOCK_KEY, LOCK_PASSWORD);
     document.getElementById('lock-screen').style.display = 'none';
+    // Show the open-for-all button so host can unlock for everyone when ready
+    const btn = document.getElementById('open-for-all-btn');
+    if (btn) btn.style.display = 'inline-block';
   } else {
     input.classList.remove('shake');
     void input.offsetWidth; // trigger reflow for animation restart
@@ -1945,6 +1962,13 @@ function tryUnlock() {
     input.value = '';
     setTimeout(() => input.classList.remove('shake'), 400);
   }
+}
+
+function openForEveryone() {
+  if (!confirm('This will remove the lock for ALL visitors. Are you sure?')) return;
+  localStorage.setItem(PUBLIC_UNLOCK_KEY, '1');
+  document.getElementById('lock-screen').style.display = 'none';
+  alert('Game is now open for everyone!');
 }
 
 // Run on page load
