@@ -752,6 +752,7 @@ body::before{
 </head>
 <body>
 
+
 <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle light/dark mode" type="button">
   <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
   <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -971,33 +972,33 @@ body::before{
 const SERVER_URL = 'https://genpuzzles-server.onrender.com';
 
 const WORD_DEFINITIONS = {
-  ADJUDICATE:    'To make an official decision about a dispute after considering the facts and evidence',
-  UNHARDCODED:   'Open source routing for AI models, built by GenLayer Labs',
-  NEUROCREATIVE: 'A team-assigned role for consistent quality content creators in the GenLayer community',
-  SINGULARITY:   "GenLayer's highest community role for members who consistently go above and beyond",
-  INTERNETCOURT: 'Dispute resolution for the agent economy, built on GenLayer',
-  ARGUEDOTFUN:   'The first argumentation market, built on Base and powered by GenLayer',
-  GENLAYERLABS:  'The research and engineering lab building the GenLayer protocol',
-  FUDMARKETS:    'The social layer for crypto conviction, built on Base and powered by GenLayer',
-  AGENTICERA:    'The era in which AI systems act as autonomous agents rather than just responding to prompts',
-  SYNAPSE:       'Level 16 community role in GenLayer Discord with additional requirements and perks',
-  RALLY:         'The future of decentralized marketing, powered by GenLayer',
-  GENFRENS:      'The name for members of the GenLayer community',
-  ONCHAIN:       'An action, transaction, or data recorded directly on a blockchain',
-  MOLECULE:      'Level one assigned role in the GenLayer Discord community',
-  BRAIN:         'Level 32 assigned role in GenLayer Discord with additional requirements and perks',
-  WINGSTON:      "Rally's official NFT collection",
-  POAP:          'Proof of Attendance Protocol — a token that proves you were at an event',
-  GENTV:         'The section on the GenLayer portal holding live and recorded streams from the team and community',
-  GENNEWS:       'Latest announcements from the GenLayer ecosystem, found on the GenLayer portal',
-  XP:            'Earned through high-quality content, spreading the word, and major community events — not chat activity'
+  INTERNETCOURT: 'The open skill connecting the entire agentic commerce stack so any two agents can run a deal end to end',
+  VERDICT:       'The final decision or judgment made by a judge, jury, or authority after considering the facts',
+  RESOLVE:       'To solve a problem or dispute',
+  DISPUTE:       'A disagreement, argument, or conflict between two or more parties',
+  LITIGATION:    'The process of taking a legal dispute to court to be decided by a judge',
+  AIAGENTS:      'Software systems that understand goals, make decisions, and take actions on your behalf with little human intervention',
+  LLM:           'Large Language Model — AI trained on massive text to understand and generate human language',
+  CLARKE:        'A Mainnet release candidate — stable, subsidized for builders, and the last stop before Mainnet',
+  SOLIDITY:      'The programming language used to write consensus contracts on GenLayer',
+  AUDITS:        'Thorough examinations to verify that something is accurate, secure, compliant, or functioning as intended',
+  MAINNET:       'The live, real blockchain network where actual transactions take place with real digital assets',
+  WHITEPAPER:    "A detailed document explaining a project's idea, technology, goals, and how it works",
+  NODE:          'A device connected to a blockchain that stores data, verifies transactions, and maintains the network',
+  RUZGAR:        "GenLayer's community lead",
+  RASKOVSKY:     'Co-founder and CTO of the GenLayer Foundation and creator of InternetCourt',
+  CASTELLANA:    'CEO of GenLayer Labs',
+  MOCHI:         'The official mascot of GenLayer',
+  NEUROHOST:     "GenLayer's Discord event hosts",
+  HACKATHON:     'A time-limited event where builders collaborate to create apps or prototypes, often competing for prizes',
+  PORTAL:        'The central hub for the GenLayer ecosystem — explore apps, earn Points, and climb the leaderboard'
 };
 
 const WORD_LIST = [
-  'ADJUDICATE','UNHARDCODED','NEUROCREATIVE','SINGULARITY',
-  'INTERNETCOURT','ARGUEDOTFUN','GENLAYERLABS','FUDMARKETS',
-  'AGENTICERA','SYNAPSE','RALLY','GENFRENS','ONCHAIN',
-  'MOLECULE','BRAIN','WINGSTON','POAP','GENTV','GENNEWS','XP'
+  'INTERNETCOURT','VERDICT','RESOLVE','DISPUTE','LITIGATION',
+  'AIAGENTS','LLM','CLARKE','SOLIDITY','AUDITS',
+  'MAINNET','WHITEPAPER','NODE','RUZGAR','RASKOVSKY',
+  'CASTELLANA','MOCHI','NEUROHOST','HACKATHON','PORTAL'
 ];
 const GRID_SIZE = 15;
 const GAME_DURATION = 300;
@@ -1831,6 +1832,7 @@ function hideCompletionCard() {
   document.getElementById('completion-card').classList.remove('show');
 }
 </script>
+
 
 
 </body>
