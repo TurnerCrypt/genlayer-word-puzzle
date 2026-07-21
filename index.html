@@ -1070,12 +1070,16 @@ function initSocket() {
     return;
   }
 
+  let _firstConnect = true;
   socket.on('connect', () => {
     console.log('Socket connected:', socket.id);
     showConnStatus('Connected', true);
     setTimeout(() => hideConnStatus(), 2000);
+    // Only attempt reconnect on subsequent connections (not the very first one)
+    // to avoid firing reconnect_player with a stale localStorage room code
+    // when the player is about to create or join a fresh room.
+    if (_firstConnect) { _firstConnect = false; return; }
     // Try in-memory state first, then fall back to localStorage
-    // (localStorage survives mobile suspension / page reload)
     const roomCode = state.roomCode || localStorage.getItem('gp_room');
     const playerName = state.playerName || localStorage.getItem('gp_name');
     if (roomCode && playerName) {
