@@ -772,16 +772,18 @@ body::before{
 }
 #thirty-sec-banner.show {
   display: block;
-  animation: bannerPulse 0.6s ease infinite alternate;
+  animation: bannerFlash 1s ease forwards;
 }
-@keyframes bannerPulse {
-  from { box-shadow: 0 4px 24px rgba(255,95,109,0.4); transform: translateX(-50%) scale(1); }
-  to   { box-shadow: 0 6px 36px rgba(255,95,109,0.8); transform: translateX(-50%) scale(1.04); }
+@keyframes bannerFlash {
+  0%   { opacity: 0; transform: translateX(-50%) scale(0.8); }
+  20%  { opacity: 1; transform: translateX(-50%) scale(1.05); }
+  60%  { opacity: 1; transform: translateX(-50%) scale(1); }
+  100% { opacity: 0; transform: translateX(-50%) scale(0.9); }
 }
 </style>
 </head>
 <body>
-<div id="thirty-sec-banner">⏰ <span id="banner-countdown">30</span>s remaining!</div>
+<div id="thirty-sec-banner">⏰ 30 seconds remaining!</div>
 
 
 <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle light/dark mode" type="button">
@@ -1635,15 +1637,14 @@ function tickTimer() {
     el.className = 'timer-val' + (remaining <= 30 ? ' urgent' : '');
   }
 
-  // 30-second warning banner
-  const banner = document.getElementById('thirty-sec-banner');
-  const countdownEl = document.getElementById('banner-countdown');
-  if (banner) {
-    if (remaining <= 30 && remaining > 0) {
-      if (!banner.classList.contains('show')) banner.classList.add('show');
-      if (countdownEl) countdownEl.textContent = remaining;
-    } else {
+  // 30-second warning banner — flash once at exactly 30s then vanish
+  if (remaining === 30) {
+    const banner = document.getElementById('thirty-sec-banner');
+    if (banner) {
       banner.classList.remove('show');
+      void banner.offsetWidth; // reset animation
+      banner.classList.add('show');
+      setTimeout(() => banner.classList.remove('show'), 1000);
     }
   }
 
