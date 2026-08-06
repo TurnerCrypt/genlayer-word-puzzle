@@ -772,13 +772,13 @@ body::before{
 }
 #thirty-sec-banner.show {
   display: block;
-  animation: bannerFlash 1s ease forwards;
+  animation: bannerFlash 2.5s ease forwards;
 }
 @keyframes bannerFlash {
-  0%   { opacity: 0; transform: translateX(-50%) scale(0.8); }
-  20%  { opacity: 1; transform: translateX(-50%) scale(1.05); }
-  60%  { opacity: 1; transform: translateX(-50%) scale(1); }
-  100% { opacity: 0; transform: translateX(-50%) scale(0.9); }
+  0%   { opacity: 0; transform: translateX(-50%) scale(0.9); }
+  10%  { opacity: 1; transform: translateX(-50%) scale(1); }
+  80%  { opacity: 1; transform: translateX(-50%) scale(1); }
+  100% { opacity: 0; transform: translateX(-50%) scale(1); }
 }
 </style>
 </head>
@@ -1637,14 +1637,15 @@ function tickTimer() {
     el.className = 'timer-val' + (remaining <= 30 ? ' urgent' : '');
   }
 
-  // 30-second warning banner — flash once at exactly 30s then vanish
-  if (remaining === 30) {
+  // 30-second warning banner — flash once only
+  if (remaining === 30 && !state._thirtyFired) {
+    state._thirtyFired = true;
     const banner = document.getElementById('thirty-sec-banner');
     if (banner) {
       banner.classList.remove('show');
-      void banner.offsetWidth; // reset animation
+      void banner.offsetWidth;
       banner.classList.add('show');
-      setTimeout(() => banner.classList.remove('show'), 1000);
+      setTimeout(() => banner.classList.remove('show'), 2500);
     }
   }
 
