@@ -1655,7 +1655,8 @@ function downloadResults() {
   ranked.forEach(row => {
     const mins = Math.floor((row.timeTaken || 0) / 60);
     const secs = String((row.timeTaken || 0) % 60).padStart(2, '0');
-    csv += `${row.rank},"${row.name}",${row.wordsFound},${mins}m ${secs}s\n`;
+    const wf = Array.isArray(row.wordsFound) ? row.wordsFound.length : (row.wordsFound || 0);
+    csv += `${row.rank},"${row.name}",${wf},${mins}m ${secs}s\n`;
   });
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
