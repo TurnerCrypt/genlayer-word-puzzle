@@ -991,32 +991,33 @@ body::before{
 const SERVER_URL = 'https://genpuzzles-server.onrender.com';
 
 const WORD_DEFINITIONS = {
-  FORK:        'A split in the blockchain where the protocol diverges into two separate paths',
-  BURN:        'Permanently removing tokens from circulation by sending them to an unspendable address',
-  HASH:        'A fixed-length fingerprint of data used to verify integrity on the blockchain',
-  MINT:        'The process of creating new tokens or NFTs on a blockchain',
-  NONCE:       'A number used once — prevents replay attacks and orders transactions per account',
-  STAKE:       'Tokens locked as collateral to participate in network validation',
-  BLOCK:       'A bundle of transactions permanently recorded on the blockchain',
-  SYBIL:       'An attack where one entity creates many fake identities to control a network',
-  QUORUM:      'The minimum number of validators needed to make a consensus decision valid',
-  COMMIT:      'The first voting phase where validators lock in their answer before revealing it',
-  REVEAL:      'The second voting phase where validators expose their previously committed answer',
-  SLASHING:    'Penalizing a validator by cutting their stake for dishonest or faulty behavior',
-  MEMPOOL:     'The waiting area where unconfirmed transactions sit before being added to a block',
-  LATENCY:     'The delay between submitting a transaction and getting a confirmed result',
-  GOSSIP:      'Peer-to-peer message spreading — deliberately absent in GenLayer',
-  CPYTHON:     'The full Python interpreter compiled to WASM and run inside GenVM',
-  PARTITION:   'A network split scenario — eliminated in GenLayer because the chain handles ordering',
-  IMMUTABLE:   'Cannot be changed — once a transaction finalizes on GenLayer it is permanent',
-  EVENTLOG:    'The ordered sequence of on-chain events that drives all validator node actions',
-  CONFORMANCE: 'Testing that verifies a system behaves exactly according to a defined specification'
+  MUTATION:     'Deliberately breaking code to prove the tests would catch it',
+  INVARIANT:    'A property that must hold true in every possible system state, no exceptions',
+  LIVENESS:     'The guarantee that a transaction will eventually complete and never get stuck forever',
+  TLAPS:        'TLA+ proof system — machine-checked proofs that properties hold for any run of any length',
+  FUZZING:      'Automatically generating random inputs to find unexpected crashes or bugs',
+  HARNESS:      'The scaffolding that runs a component under test against a controlled fake environment',
+  AVIONICS:     'Flight control software — the high-assurance engineering tradition GenLayer draws from',
+  SHRINKING:    'Automatically reducing a failing test case to the smallest sequence that still reproduces the bug',
+  SEEDED:       'A test run with a fixed random seed so any failure can be replayed exactly',
+  GRIEFING:     'Attacking a system by triggering costly actions without gaining anything',
+  DIVERGENCE:   'When two layers of the system disagree on the expected outcome — always an investigation',
+  FEESIMULATOR: 'An executable spec that sweeps every fee path and checks 24 invariants across all outcomes',
+  COVERAGE:     'How much code is exercised by tests — mutation testing checks the only kind that matters',
+  FLAKY:        'A test that sometimes passes and sometimes fails without any code change',
+  REGRESSION:   'A bug that reappears after being fixed — captured as a permanent test case',
+  ADVERSARIAL:  'A testing mode where fake validators send malicious messages to the real one',
+  MERKLE:       'A tree structure used to efficiently verify large sets of data on a blockchain',
+  TLAPLUS:      'A formal specification language used to model and machine-check concurrent system properties',
+  DEADLOCK:     'A state where a system is permanently stuck — TLA+ proofs show GenLayer can never reach one',
+  BOUNTY:       'A reward for finding bugs or vulnerabilities in a system'
 };
 
 const WORD_LIST = [
-  'FORK','BURN','HASH','MINT','NONCE','STAKE','BLOCK','SYBIL',
-  'QUORUM','COMMIT','REVEAL','SLASHING','MEMPOOL','LATENCY',
-  'GOSSIP','CPYTHON','PARTITION','IMMUTABLE','EVENTLOG','CONFORMANCE'
+  'MUTATION','INVARIANT','LIVENESS','TLAPS','FUZZING',
+  'HARNESS','AVIONICS','SHRINKING','SEEDED','GRIEFING',
+  'DIVERGENCE','FEESIMULATOR','COVERAGE','FLAKY','REGRESSION',
+  'ADVERSARIAL','MERKLE','TLAPLUS','DEADLOCK','BOUNTY'
 ];
 const GRID_SIZE = 15;
 const GAME_DURATION = 300;
