@@ -986,9 +986,9 @@ body::before{
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 <script>
 // =====================================================
-// CONFIG - UPDATE SERVER_URL AFTER DEPLOYING TO RENDER
+// CONFIG - Northflank multiplayer backend
 // =====================================================
-const SERVER_URL = 'https://genpuzzles-server.onrender.com';
+const SERVER_URL = 'https://p02--genpuzzles-server--4qb6fxhpwwmj.code.run';
 
 const WORD_DEFINITIONS = {
   MUTATION:     'Deliberately breaking code to prove the tests would catch it',
@@ -1046,7 +1046,8 @@ let state = {
   selStart: null,
   selCells: [],
   liveScores: [],
-  launching: false
+  launching: false,
+  pendingWords: {}
 };
 
 // =====================================================
@@ -1105,6 +1106,7 @@ function initSocket() {
       if (!state.isHost) state.isHost = localStorage.getItem('gp_host') === '1';
       socket.emit('reconnect_player', { name: playerName, code: roomCode });
     }
+    setTimeout(() => Object.keys(state.pendingWords || {}).forEach(submitFoundWord), 700);
   });
 
   socket.on('disconnect', (reason) => {
@@ -1182,16 +1184,18 @@ function onRoomJoined(data) {
   setLoading(false);
 
   if (data.status === 'active') {
+    state.clockOffset = data.serverNow ? (data.serverNow - Date.now()) : (state.clockOffset || 0);
     // Join mid-game
     state.grid = data.grid;
     state.wordPlacements = buildPlacements(data.grid, WORD_LIST);
-    state.foundWords = [];
+    state.foundWords = data.playerState?.wordsFound || [];
     state.foundCells = {};
     navigate('game');
     renderGrid(state.grid);
     renderWordChips(WORD_LIST);
+    restoreFoundUI();
     document.getElementById('live-players-panel').style.display = 'block';
-    document.getElementById('score-display').textContent = '0';
+    document.getElementById('score-display').textContent = state.foundWords.length;
     document.getElementById('game-leave-btn').style.display = 'inline-flex';
     document.getElementById('game-end-btn').style.display = 'none';
     startTimer(data.endsAt);
@@ -1221,17 +1225,16 @@ function onPlayerReconnected(data) {
   setLoading(false);
 
   if (data.status === 'active') {
+    state.clockOffset = data.serverNow ? (data.serverNow - Date.now()) : (state.clockOffset || 0);
     state.grid = data.grid;
     state.wordPlacements = buildPlacements(data.grid, WORD_LIST);
-    // Keep existing foundWords/foundCells - don't reset
+    // The server is authoritative after refreshes and reconnects.
+    state.foundWords = data.playerState?.wordsFound || [];
+    state.foundCells = {};
     navigate('game');
     renderGrid(state.grid);
     renderWordChips(WORD_LIST);
-    // Re-mark found words
-    state.foundWords.forEach(w => {
-      const chip = document.getElementById('chip-' + w);
-      if (chip) chip.className = 'word-chip found';
-    });
+    restoreFoundUI();
     document.getElementById('score-display').textContent = state.foundWords.length;
     document.getElementById('live-players-panel').style.display = 'block';
     document.getElementById('game-leave-btn').style.display = data.isHost ? 'none' : 'inline-flex';
@@ -1286,6 +1289,7 @@ function onGameStarted(data) {
   state.wordPlacements = buildPlacements(data.grid, WORD_LIST);
   state.foundWords = [];
   state.foundCells = {};
+  state.pendingWords = {};
 
   showCountdown(3, () => {
     navigate('game');
@@ -1407,6 +1411,7 @@ function resetState() {
   state.foundWords = [];
   state.foundCells = {};
   state.liveScores = [];
+  state.pendingWords = {};
   state.launching = false;
   state.grid = [];
   state.wordPlacements = {};
@@ -1579,13 +1584,13 @@ function checkSelection() {
   const wordRev = word.split('').reverse().join('');
   for (const candidate of [word, wordRev]) {
     if (WORD_LIST.includes(candidate) && !state.foundWords.includes(candidate)) {
-      wordFound(candidate); return;
+      wordFound(candidate, [...state.selCells]); return;
     }
   }
   state.selCells = [];
 }
 
-function wordFound(word) {
+function wordFound(word, cells) {
   const colorIdx = state.foundWords.length % WORD_COLORS;
   state.foundWords.push(word);
   if (state.wordPlacements[word]) {
@@ -1601,9 +1606,48 @@ function wordFound(word) {
   document.getElementById('score-display').textContent = state.foundWords.length;
   showWordPopup(word);
   showToast(word + ' found!', 'success');
-  // Tell server
-  if (socket) socket.emit('word_found', { word });
+  submitFoundWord(word, cells);
   if (state.foundWords.length === WORD_LIST.length) showCompletionCard();
+}
+
+function restoreFoundUI() {
+  state.foundCells = {};
+  state.foundWords.forEach((word, colorIdx) => {
+    const chip = document.getElementById('chip-' + word);
+    if (chip) chip.className = 'word-chip found';
+    (state.wordPlacements[word] || []).forEach(({ r, c }) => {
+      state.foundCells[r + ',' + c] = colorIdx % WORD_COLORS;
+      const cell = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+      if (cell) cell.classList.add('found-' + (colorIdx % WORD_COLORS));
+    });
+  });
+}
+
+function submitFoundWord(word, cells) {
+  const item = state.pendingWords[word] || {
+    word,
+    cells: cells || state.wordPlacements[word] || [],
+    foundAt: Date.now() + (state.clockOffset || 0),
+    submissionId: `${state.playerName}-${word}-${Date.now()}`,
+    attempts: 0
+  };
+  state.pendingWords[word] = item;
+  if (!socket || !socket.connected || item.sending) return;
+  item.sending = true;
+  item.attempts++;
+  socket.timeout(1800).emit('word_found', item, (err, response) => {
+    item.sending = false;
+    if (!err && response?.ok) {
+      delete state.pendingWords[word];
+      return;
+    }
+    if (!err && response && response.retryable === false) {
+      delete state.pendingWords[word];
+      return;
+    }
+    if (item.attempts < 8 && state.screen === 'game')
+      setTimeout(() => submitFoundWord(word), Math.min(3000, 350 * item.attempts));
+  });
 }
 
 // =====================================================
@@ -1676,7 +1720,7 @@ function downloadResults() {
   if (!rows || !rows.length) return;
   let currentRank = 1;
   const ranked = rows.map((row, i) => {
-    if (i > 0 && row.wordsFound !== rows[i-1].wordsFound) currentRank = i + 1;
+    if (i > 0 && (row.wordsFound !== rows[i-1].wordsFound || row.timeTaken !== rows[i-1].timeTaken)) currentRank = i + 1;
     return { ...row, rank: currentRank };
   });
   const now = new Date();
