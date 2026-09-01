@@ -1077,7 +1077,7 @@ function initSocket() {
 
   try {
     socket = io(SERVER_URL, {
-      transports: ['polling', 'websocket'],
+      transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1500,
       reconnectionAttempts: 20,
@@ -1306,8 +1306,15 @@ function onGameStarted(data) {
 }
 
 function onScoresUpdated(data) {
-  state.liveScores = data.players;
-  renderLiveScores(data.players);
+  if (data.player) {
+    const i = state.liveScores.findIndex(p => p.id === data.player.id);
+    if (i >= 0) state.liveScores[i] = data.player;
+    else state.liveScores.push(data.player);
+  } else if (data.players) {
+    state.liveScores = data.players;
+  }
+  clearTimeout(state._scoreRenderTimer);
+  state._scoreRenderTimer = setTimeout(() => renderLiveScores(state.liveScores), 150);
 }
 
 function onGameEnded(data) {
