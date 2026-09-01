@@ -1077,10 +1077,12 @@ function initSocket() {
 
   try {
     socket = io(SERVER_URL, {
-      transports: ['websocket', 'polling'],
+      // Polling-first is more reliable on mobile/carrier networks; Socket.IO
+      // upgrades to WebSocket automatically after the initial handshake.
+      transports: ['polling', 'websocket'],
       reconnection: true,
       reconnectionDelay: 1500,
-      reconnectionAttempts: 20,
+      reconnectionAttempts: 120,
       timeout: 25000,
       upgrade: true
     });
