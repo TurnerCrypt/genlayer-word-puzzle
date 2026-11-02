@@ -991,33 +991,33 @@ body::before{
 const SERVER_URL = 'https://p02--genpuzzles-server--4qb6fxhpwwmj.code.run';
 
 const WORD_DEFINITIONS = {
-  MUTATION:     'Deliberately breaking code to prove the tests would catch it',
-  INVARIANT:    'A property that must hold true in every possible system state, no exceptions',
-  LIVENESS:     'The guarantee that a transaction will eventually complete and never get stuck forever',
-  TLAPS:        'TLA+ proof system — machine-checked proofs that properties hold for any run of any length',
-  FUZZING:      'Automatically generating random inputs to find unexpected crashes or bugs',
-  HARNESS:      'The scaffolding that runs a component under test against a controlled fake environment',
-  AVIONICS:     'Flight control software — the high-assurance engineering tradition GenLayer draws from',
-  SHRINKING:    'Automatically reducing a failing test case to the smallest sequence that still reproduces the bug',
-  SEEDED:       'A test run with a fixed random seed so any failure can be replayed exactly',
-  GRIEFING:     'Attacking a system by triggering costly actions without gaining anything',
-  DIVERGENCE:   'When two layers of the system disagree on the expected outcome — always an investigation',
-  FEESIMULATOR: 'An executable spec that sweeps every fee path and checks 24 invariants across all outcomes',
-  COVERAGE:     'How much code is exercised by tests — mutation testing checks the only kind that matters',
-  FLAKY:        'A test that sometimes passes and sometimes fails without any code change',
-  REGRESSION:   'A bug that reappears after being fixed — captured as a permanent test case',
-  ADVERSARIAL:  'A testing mode where fake validators send malicious messages to the real one',
-  MERKLE:       'A tree structure used to efficiently verify large sets of data on a blockchain',
-  TLAPLUS:      'A formal specification language used to model and machine-check concurrent system properties',
-  DEADLOCK:     'A state where a system is permanently stuck — TLA+ proofs show GenLayer can never reach one',
-  BOUNTY:       'A reward for finding bugs or vulnerabilities in a system'
+  GREYBOXING:   'Giving each validator a different hidden model setup and filters, so one attack cannot fool them all',
+  ROUTING:      'Choosing which AI model or fallback path should handle a particular request',
+  SUBJECTIVE:   'An outcome that requires judgment because there is no single mechanically exact answer',
+  REPUTATION:   'A trust assessment built from a participant’s past behavior and supporting evidence',
+  DELIVERABLES: 'The work submitted for an Intelligent Contract to evaluate against agreed requirements',
+  ARBITRATE:    'To resolve a disagreement through neutral AI-validator consensus',
+  EVIDENCE:     'The sources and material validators inspect before accepting a proposed result',
+  ESCROW:       'Funds held safely until agreed conditions are met or a dispute is resolved',
+  CONSTITUTION: 'The written rules a DAO uses to govern proposals and treasury decisions',
+  TREASURY:     'Shared community funds managed according to a DAO’s rules',
+  REFEREES:     'AI-powered Intelligent Contracts that settle game disputes through consensus',
+  AUDITABLE:    'Able to be inspected and verified instead of relying on a hidden decision maker',
+  TRANSPARENCY: 'Making on-chain analysis and decisions clear enough for others to inspect',
+  CARBON:       'The environmental impact a GenLayer application can compare across execution routes',
+  ADOPTION:     'Growth in real usage that increases activity and developer fee opportunities',
+  REVENUE:      'Recurring fees an Intelligent Contract creator can earn from contract usage',
+  PAYOUTS:      'Funds released after validators confirm that the required outcome occurred',
+  MERIT:        'Judging a submission by the quality of its work rather than status or influence',
+  JUDGMENT:     'A reasoned decision made by interpreting evidence, rules and context',
+  DISAGREE:     'When agents or validators reach different conclusions and need resolution'
 };
 
 const WORD_LIST = [
-  'MUTATION','INVARIANT','LIVENESS','TLAPS','FUZZING',
-  'HARNESS','AVIONICS','SHRINKING','SEEDED','GRIEFING',
-  'DIVERGENCE','FEESIMULATOR','COVERAGE','FLAKY','REGRESSION',
-  'ADVERSARIAL','MERKLE','TLAPLUS','DEADLOCK','BOUNTY'
+  'GREYBOXING','ROUTING','SUBJECTIVE','REPUTATION','DELIVERABLES',
+  'ARBITRATE','EVIDENCE','ESCROW','CONSTITUTION','TREASURY',
+  'REFEREES','AUDITABLE','TRANSPARENCY','CARBON','ADOPTION',
+  'REVENUE','PAYOUTS','MERIT','JUDGMENT','DISAGREE'
 ];
 const GRID_SIZE = 15;
 const GAME_DURATION = 300;
