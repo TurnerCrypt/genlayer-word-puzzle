@@ -767,6 +767,163 @@ body::before{
   100%{opacity:0;transform:translateX(-50%) scale(1);}
 }
 </style>
+<style id="arcade-refresh">
+/* Arcade refresh: presentation only; gameplay remains in the existing scripts. */
+:root{
+  --bg:#0b0c12;--bg2:#14151e;--text2:#a2a4b6;
+  --border:rgba(194,192,229,.14);--card-bg:#14151f;
+  --cell-bg:rgba(255,255,255,.035);
+}
+body{
+  background:radial-gradient(ellipse at 12% 8%,rgba(147,51,234,.13),transparent 48%),
+    radial-gradient(ellipse at 92% 65%,rgba(240,224,64,.055),transparent 42%),var(--bg);
+}
+body::before{background-size:48px 48px;opacity:.55}
+button,input{ -webkit-tap-highlight-color:transparent }
+button:focus-visible,a:focus-visible{outline:3px solid var(--cyan);outline-offset:5px}
+.theme-toggle-btn{background:var(--card-bg);box-shadow:0 4px 18px #0003}
+.topbar{padding-right:54px;margin-bottom:32px}
+.page-logo{font-size:20px;letter-spacing:-.5px;text-shadow:none}
+.back-btn{color:var(--text2);border-radius:12px;background:var(--cell-bg)}
+.arcade-eyebrow{font-size:10px;font-weight:900;letter-spacing:2.4px;text-transform:uppercase;color:var(--yellow);display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:18px}
+.arcade-eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--yellow);box-shadow:0 0 12px #f0e04580}
+.home-tagline{color:var(--text2);font-size:clamp(13px,2vw,16px);font-weight:700;text-align:center;line-height:1.6;margin-top:22px}
+.home-details{display:flex;align-items:center;justify-content:center;gap:22px;margin-top:23px;color:var(--text2);font-size:10px;font-weight:900;letter-spacing:1.3px;text-transform:uppercase}
+.home-details span+span{position:relative}
+.home-details span+span::before{content:'';position:absolute;left:-12px;top:5px;width:3px;height:3px;background:var(--purple);border-radius:50%}
+.logo-text{text-shadow:0 5px 0 #0005;letter-spacing:-3px}
+.mascot-img{filter:drop-shadow(0 12px 30px #9333ea40)}
+.blob{opacity:.75}
+.btn-start{border-radius:16px;box-shadow:0 5px 0 #a99b1c,0 12px 30px #f0e04018;margin-top:28px}
+.btn-start:hover{transform:translateY(-3px);box-shadow:0 8px 0 #a99b1c,0 15px 32px #f0e04025}
+.btn-start:active{transform:translateY(3px);box-shadow:0 2px 0 #a99b1c}
+.mode-hero{margin-bottom:30px}
+.mode-hero-title{font-size:clamp(38px,7vw,62px);line-height:1.08;letter-spacing:-1.5px}
+.mode-hero-sub{line-height:1.6;max-width:340px;margin:12px auto 0}
+.mode-cards{max-width:720px;flex-direction:row;gap:18px}
+.mode-card{font-family:var(--font-b);text-align:left;color:var(--text);width:100%;flex:1;flex-direction:column;align-items:flex-start;gap:22px;padding:28px;min-width:0;border-radius:22px;background:linear-gradient(150deg,#1c1d2b,#12131b);box-shadow:0 16px 40px #0002}
+.mode-card::before{opacity:1;pointer-events:none}
+.mode-card-create{border-top:2px solid #f0e04080}
+.mode-card-join{border-top:2px solid #b48af080}
+.mode-card-icon{width:56px;height:56px;border-radius:16px;background:#f0e04010;border:1px solid #f0e04025;display:flex;align-items:center;justify-content:center;font-size:28px;filter:none}
+.mode-card-join .mode-card-icon{background:#9333ea18;border-color:#9333ea40}
+.mode-card-title{font-size:24px;letter-spacing:-.5px}
+.mode-card-desc{line-height:1.65;margin-top:10px;max-width:260px}
+.mode-card-arrow{position:absolute;right:28px;top:40px;width:30px;height:30px;border:1px solid var(--border);border-radius:50%;display:grid;place-items:center;font-size:17px}
+.form-card,.lobby-card{background:linear-gradient(145deg,#1b1b28,#11121a);border-color:var(--border);box-shadow:0 24px 70px #0004,inset 0 1px 0 #ffffff08;backdrop-filter:none}
+.form-card-header{gap:12px}
+.form-card-sub{line-height:1.65}
+.input{background:#090a1180;border-color:var(--border);min-height:52px}
+.input::placeholder{color:#727487}
+.input-label{color:var(--text2)}
+.btn{min-height:48px}
+.btn-yellow{box-shadow:0 4px 0 #a99b1c,0 8px 24px #f0e04012}
+.btn-purple{background:#8034d9;box-shadow:0 4px 0 #4d1e84}
+.btn:disabled{cursor:wait;opacity:.6;transform:none}
+.room-code-box{background:repeating-linear-gradient(135deg,#f0e04003 0 8px,transparent 8px 16px),#f0e04008;border:1px dashed #f0e04055;border-radius:16px;padding:24px 16px}
+.room-code-value{letter-spacing:10px;padding-left:10px;text-shadow:none;margin-top:10px}
+.room-code-label{color:var(--text2)}
+.copy-code-btn{border-radius:10px;padding:10px 20px}
+.player-list{background:#090a1140;padding:8px}
+.player-item{padding:12px;border-bottom:1px solid var(--border);border-radius:8px}
+.player-item:last-child{border-bottom:0}
+.host-badge{border:1px solid #f0e04020;border-radius:6px;padding:3px 9px}
+#screen-game{padding:26px 18px 48px}
+.game-header{padding:16px 18px;border:1px solid var(--border);background:var(--card-bg);border-radius:18px;margin-bottom:18px;max-width:1020px;gap:16px}
+.game-brand{font-size:20px;text-shadow:none;letter-spacing:-.5px}
+.timer-wrap{border-radius:12px;background:#f0e04008;border-color:#f0e04025}
+.timer-val{font-variant-numeric:tabular-nums;text-shadow:none;font-size:26px}
+.score-pill{border-radius:12px;background:var(--cell-bg);padding:9px 14px;gap:9px}
+.score-pill::after{content:'/ 20';font-size:12px;color:var(--text2)}
+.game-leave-btn,.game-end-btn{border-radius:10px;min-height:38px}
+.game-layout{max-width:1020px;display:grid;grid-template-columns:minmax(0,1fr);gap:18px;align-items:start;justify-items:center}
+.grid-wrap{position:relative;max-width:100%;border:1px solid var(--border);border-radius:20px;padding:12px;background:linear-gradient(145deg,#1d1c2a,#101118);box-shadow:0 16px 40px #0003}
+.board-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:0 3px 12px;color:var(--text2);font-size:9px;letter-spacing:1.5px;font-weight:900;text-transform:uppercase}
+.board-heading span:first-child{color:var(--yellow)}
+.grid{padding:4px;border:0;border-radius:10px;background:#08090f80;gap:2px}
+.cell{background:var(--cell-bg);box-shadow:inset 0 1px 0 #ffffff05;font-size:15px;border-radius:5px;color:#e0dfec}
+.cell.selecting{background:#f0e040;color:#171708;box-shadow:0 0 12px #f0e04040;transform:none}
+.cell.flash{animation:foundFlash .35s ease}
+.board-hint{text-align:center;color:var(--text2);font-size:11px;font-weight:700;padding-top:12px}
+.word-panel,.live-panel{background:var(--card-bg);padding:20px;border-radius:20px;min-width:0}
+.word-panel-title,.live-panel-title{color:var(--text2);letter-spacing:1.7px;border-bottom:1px solid var(--border);padding-bottom:13px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.live-panel-title::before{content:'';width:6px;height:6px;border-radius:50%;background:#84cc16;box-shadow:0 0 8px #84cc1640}
+.word-list-grid{gap:7px}
+.word-chip{font-size:11px;padding:9px 8px;letter-spacing:.2px;border:1px solid var(--border);color:#b8b8c9;border-radius:8px;background:var(--cell-bg);gap:5px;min-width:0}
+.word-chip .check{width:11px;flex-shrink:0}
+.word-chip.found{color:#9ae995;border-color:#84cc1640;background:#84cc1610;text-decoration:none}
+.live-player-row{padding:9px 12px;max-width:100%;border-radius:10px}
+.live-player-score{background:#f0e0400c;border-radius:6px;padding:2px 7px;margin-left:8px}
+.lb-row{background:var(--card-bg);padding:18px;border-radius:16px}
+.lb-row.rank-1{border-left:4px solid #f0e040;background:linear-gradient(100deg,#f0e04012,var(--card-bg))}
+.lb-row.rank-2{border-left:4px solid #c0c0d8}
+.lb-row.rank-3{border-left:4px solid #cd7f50}
+.lb-subtitle{letter-spacing:1.5px;text-transform:uppercase;font-size:11px}
+#word-popup{border-radius:18px!important;max-width:calc(100vw - 32px);padding:20px 24px!important;box-shadow:0 12px 50px #0005!important}
+#word-popup .wp-def{line-height:1.65!important;font-size:13px!important}
+#completion-card .comp-inner{border-radius:24px;border-color:#f0e04050;background:var(--card-bg)}
+[data-theme="light"]{--bg:#f3f2ed;--bg2:#eae9e3;--text2:#606170;--card-bg:#fffef9;--border:#25213625;--cell-bg:#33264108}
+[data-theme="light"] body{background:radial-gradient(ellipse at 12% 8%,#9333ea09,transparent 48%),var(--bg)}
+[data-theme="light"] .mode-card,[data-theme="light"] .form-card,[data-theme="light"] .lobby-card,[data-theme="light"] .grid-wrap{background:linear-gradient(145deg,#fffefb,#eeedf5);box-shadow:0 12px 32px #231c4210}
+[data-theme="light"] .arcade-eyebrow,[data-theme="light"] .page-logo,[data-theme="light"] .board-heading span:first-child{color:#746400}
+[data-theme="light"] .mode-card-create .mode-card-title{color:#746400}
+[data-theme="light"] .mode-card-join .mode-card-title{color:#7631b8}
+[data-theme="light"] .input,[data-theme="light"] .player-list,[data-theme="light"] .grid{background:#25213606}
+[data-theme="light"] .cell{color:#292536}
+[data-theme="light"] .cell.selecting{background:#f0e040;color:#171708}
+[data-theme="light"] .cell[class*="found-"]{color:#4b3670}
+[data-theme="light"] .word-chip{color:#565266}
+[data-theme="light"] .word-chip.found{color:#367429;background:#84cc1618}
+[data-theme="light"] .room-code-value,[data-theme="light"] .score-pill span,[data-theme="light"] .live-player-score,[data-theme="light"] .lb-words{color:#746400}
+@media(min-width:960px){
+  .game-header{padding-right:66px}
+  .game-layout{grid-template-columns:auto minmax(0,1fr)}
+  .grid-wrap{grid-column:1;grid-row:1}
+  .word-panel{grid-column:2;grid-row:1}
+  .live-panel{grid-column:1/-1}
+  .live-players-inner{gap:10px}
+}
+@media(min-width:601px) and (max-width:959px){
+  .word-panel,.live-panel{max-width:604px}
+  .game-header{max-width:604px;padding-right:52px}
+}
+@media(max-width:600px){
+  :root{--cell:clamp(15px,calc((100vw - 66px)/15),32px)}
+  .home-details{gap:18px;font-size:9px;letter-spacing:1px}
+  .home-details span+span::before{left:-10px}
+  .home-tagline{max-width:270px}
+  .mode-cards{flex-direction:column;max-width:420px;gap:14px}
+  .mode-card{flex-direction:row;gap:16px;padding:22px 18px;align-items:center}
+  .mode-card-title{font-size:22px;padding-right:18px}
+  .mode-card-desc{font-size:12px;margin-top:7px}
+  .mode-card-icon{width:46px;height:46px;border-radius:13px;font-size:24px}
+  .mode-card-arrow{right:14px;top:20px;border:0;width:22px}
+  #screen-game{padding:58px 8px 28px}
+  .game-header{padding:12px;gap:10px;margin-bottom:12px;border-radius:14px}
+  .game-brand{font-size:16px}
+  .timer-wrap{padding:6px 9px;gap:5px}
+  .timer-val{font-size:20px;min-width:46px}
+  .timer-icon{font-size:12px}
+  .score-pill{padding:6px 9px;gap:4px;font-size:11px}
+  .score-pill span{font-size:18px}
+  .score-pill::after{font-size:10px}
+  .game-layout{gap:12px}
+  .grid-wrap{padding:9px;border-radius:16px}
+  .grid{padding:3px;gap:1px}
+  .cell{font-size:clamp(9px,2.6vw,14px);border-radius:4px}
+  .board-heading{font-size:8px;letter-spacing:1px;padding-bottom:10px}
+  .board-hint{font-size:10px;padding-top:9px}
+  .word-panel,.live-panel{padding:15px;border-radius:16px}
+  .word-chip{font-size:10px;padding:9px 7px;letter-spacing:0}
+  .word-panel-title,.live-panel-title{font-size:9px}
+  .topbar{padding-top:20px;margin-bottom:24px}
+  .page-logo{font-size:17px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
+
+</style>
 </head>
 <body>
 <div id="thirty-sec-banner">⏰ 30 seconds remaining!</div>
@@ -805,7 +962,9 @@ body::before{
         <span class="logo-text">GENPUZZLES</span>
       </div>
     </div>
-    <button class="btn-start" onclick="navigate('mode-select')">Let&apos;s Start The Game</button>
+    <p class="home-tagline">Sharp eyes. Quick minds. Friendly competition.</p>
+    <button class="btn-start" onclick="navigate('mode-select')">Let&apos;s Play <span aria-hidden="true">&#8599;</span></button>
+    <div class="home-details"><span>20 hidden words</span><span>One grid</span><span>Bragging rights</span></div>
   </div>
 </div>
 
@@ -818,26 +977,27 @@ body::before{
     </div>
     <div style="display:flex;flex-direction:column;align-items:center;width:100%;flex:1;justify-content:center">
       <div class="mode-hero">
+        <div class="arcade-eyebrow">Your next challenge</div>
         <div class="mode-hero-title">Choose<br>Your Mode</div>
         <div class="mode-hero-sub">Play with friends or challenge the community</div>
       </div>
       <div class="mode-cards">
-        <div class="mode-card mode-card-create" onclick="navigate('create-room')">
+        <button type="button" class="mode-card mode-card-create" onclick="navigate('create-room')">
           <div class="mode-card-icon">&#127968;</div>
           <div class="mode-card-body">
             <div class="mode-card-title">Create Room</div>
             <div class="mode-card-desc">Host a game, share the code and race your friends</div>
           </div>
           <div class="mode-card-arrow">&#8594;</div>
-        </div>
-        <div class="mode-card mode-card-join" onclick="navigate('join-room')">
+</button>
+        <button type="button" class="mode-card mode-card-join" onclick="navigate('join-room')">
           <div class="mode-card-icon">&#128640;</div>
           <div class="mode-card-body">
             <div class="mode-card-title">Join Room</div>
             <div class="mode-card-desc">Enter a room code and jump into the action</div>
           </div>
           <div class="mode-card-arrow">&#8594;</div>
-        </div>
+</button>
       </div>
     </div>
   </div>
@@ -858,7 +1018,7 @@ body::before{
           <div class="form-card-sub">You&apos;ll get a shareable code for your friends</div>
         </div>
         <div class="input-group">
-          <label class="input-label">Your Name</label>
+          <label class="input-label" for="host-name">Your Name</label>
           <input class="input" id="host-name" placeholder="Enter your name" maxlength="20" autocomplete="off" oninput="sanitizeInput(this)">
         </div>
         <button class="btn btn-yellow btn-lg" id="create-room-btn" onclick="createRoom()">Create Room &#8594;</button>
@@ -882,13 +1042,13 @@ body::before{
           <div class="form-card-sub">Enter the room code from your host</div>
         </div>
         <div class="input-group">
-          <label class="input-label">Room Code</label>
+          <label class="input-label" for="join-code">Room Code</label>
           <input class="input" id="join-code" placeholder="ABCD" maxlength="6"
             style="text-transform:uppercase;letter-spacing:6px;font-family:var(--font-d);font-size:28px;text-align:center;padding:16px"
             oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" autocomplete="off">
         </div>
         <div class="input-group">
-          <label class="input-label">Your Name</label>
+          <label class="input-label" for="join-name">Your Name</label>
           <input class="input" id="join-name" placeholder="Enter your name" maxlength="20" autocomplete="off" oninput="sanitizeInput(this)">
         </div>
         <button class="btn btn-purple btn-lg" id="join-room-btn" onclick="joinRoom()">Join Room &#8594;</button>
@@ -944,7 +1104,9 @@ body::before{
   </div>
   <div class="game-layout">
     <div class="grid-wrap">
+      <div class="board-heading"><span>The word arena</span><span>15 &times; 15</span></div>
       <div class="grid" id="puzzle-grid"></div>
+      <div class="board-hint">Drag across letters in any direction to find a word.</div>
     </div>
     <div class="word-panel">
       <div class="word-panel-title">Words to Find</div>
