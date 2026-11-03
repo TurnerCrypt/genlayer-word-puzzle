@@ -927,6 +927,30 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--cyan);outline-offse
 }
 
 </style>
+<style id="homepage-wave">
+/* One entrance wave; keep the original mascot dimensions and title layout. */
+#screen-home .mascot-wrap{animation:none;transform-origin:50% 90%}
+.logo-letter{display:inline-block}
+#screen-home.home-wave .logo-letter{animation:homeLetterWave 800ms cubic-bezier(.25,.6,.35,1) both;animation-delay:calc(var(--letter)*75ms)}
+#screen-home.home-wave .mascot-wrap{animation:homeMascotHop 810ms ease-in-out both;animation-delay:var(--mascot-wave-delay,390ms)}
+@keyframes homeLetterWave{
+ 0%,100%{transform:translateY(0) rotate(0deg);color:inherit}
+ 45%{transform:translateY(-12px) rotate(-2deg);color:var(--yellow)}
+ 70%{transform:translateY(2px) rotate(0deg);color:inherit}
+}
+@keyframes homeMascotHop{
+ 0%,100%{transform:translateY(0) rotate(0deg) scale(1)}
+ 12%{transform:translateY(3px) rotate(-2deg) scale(1.025,.96)}
+ 25%{transform:translateY(-4px) rotate(-1deg) scale(.985,1.025)}
+ 38%{transform:translateY(-12px) rotate(2deg) scale(1)}
+ 52%{transform:translateY(-7px) rotate(3deg) scale(1)}
+ 70%{transform:translateY(2px) rotate(0deg) scale(1.025,.965)}
+ 85%{transform:translateY(-1px) rotate(-.6deg) scale(.995,1.01)}
+}
+@media(prefers-reduced-motion:reduce){
+ #screen-home.home-wave .logo-letter,#screen-home.home-wave .mascot-wrap{animation:none!important}
+}
+</style>
 </head>
 <body>
 <div id="thirty-sec-banner">⏰ 30 seconds remaining!</div>
@@ -958,11 +982,11 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--cyan);outline-offse
     </div>
     <div class="logo-block">
       <div class="logo-mobile">
-        <span class="logo-text">GEN</span>
-        <span class="logo-text line2">PUZZLES</span>
+        <span class="logo-text" role="img" aria-label="GEN"><span class="logo-letter" aria-hidden="true" style="--letter:0">G</span><span class="logo-letter" aria-hidden="true" style="--letter:1">E</span><span class="logo-letter" aria-hidden="true" style="--letter:2">N</span></span>
+        <span class="logo-text line2" role="img" aria-label="PUZZLES"><span class="logo-letter" aria-hidden="true" style="--letter:0">P</span><span class="logo-letter" aria-hidden="true" style="--letter:1">U</span><span class="logo-letter" aria-hidden="true" style="--letter:2">Z</span><span class="logo-letter" aria-hidden="true" style="--letter:3">Z</span><span class="logo-letter" aria-hidden="true" style="--letter:4">L</span><span class="logo-letter" aria-hidden="true" style="--letter:5">E</span><span class="logo-letter" aria-hidden="true" style="--letter:6">S</span></span>
       </div>
       <div class="logo-desktop">
-        <span class="logo-text">GENPUZZLES</span>
+        <span class="logo-text" role="img" aria-label="GENPUZZLES"><span class="logo-letter" aria-hidden="true" style="--letter:0">G</span><span class="logo-letter" aria-hidden="true" style="--letter:1">E</span><span class="logo-letter" aria-hidden="true" style="--letter:2">N</span><span class="logo-letter" aria-hidden="true" style="--letter:3">P</span><span class="logo-letter" aria-hidden="true" style="--letter:4">U</span><span class="logo-letter" aria-hidden="true" style="--letter:5">Z</span><span class="logo-letter" aria-hidden="true" style="--letter:6">Z</span><span class="logo-letter" aria-hidden="true" style="--letter:7">L</span><span class="logo-letter" aria-hidden="true" style="--letter:8">E</span><span class="logo-letter" aria-hidden="true" style="--letter:9">S</span></span>
       </div>
     </div>
     <p class="home-tagline">Sharp eyes. Quick minds. Friendly competition.</p>
@@ -2088,5 +2112,23 @@ function hideCompletionCard() {
 
 
 
+<script id="homepage-wave-motion">
+window.addEventListener('DOMContentLoaded',()=>{
+ const home=document.getElementById('screen-home');
+ if(!home || matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ const ready=document.fonts ? document.fonts.ready : Promise.resolve();
+ ready.then(()=>{
+  const start=()=>{
+   if(!home.classList.contains('active'))return false;
+   home.style.setProperty('--mascot-wave-delay',matchMedia('(min-width:640px)').matches?'390ms':'130ms');
+   setTimeout(()=>home.classList.add('home-wave'),650);
+   return true;
+  };
+  if(start())return;
+  const observer=new MutationObserver(()=>{if(start())observer.disconnect();});
+  observer.observe(home,{attributes:true,attributeFilter:['class']});
+ });
+});
+</script>
 </body>
 </html>
