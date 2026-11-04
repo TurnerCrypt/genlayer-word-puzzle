@@ -24,7 +24,7 @@
  if(seen || reduced){window.finishGenIntro();return;}
  document.documentElement.classList.add('gen-intro-pending');
  // Fail open even when a CDN script prevents DOMContentLoaded.
- setTimeout(window.finishGenIntro,6000);
+ setTimeout(window.finishGenIntro,8000);
 })();
 
 </script>
@@ -1025,7 +1025,7 @@ html.gen-intro-pending #app,html.gen-intro-pending .theme-toggle-btn{visibility:
  };
  intro.querySelector('button').addEventListener('click',dismiss,{once:true});
  // A brief brand entrance, never a wait for the multiplayer server.
- setTimeout(dismiss,3000);
+ setTimeout(dismiss,4650);
 })();
 
 </script>
