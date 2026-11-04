@@ -24,7 +24,7 @@
  if(seen || reduced){window.finishGenIntro();return;}
  document.documentElement.classList.add('gen-intro-pending');
  // Fail open even when a CDN script prevents DOMContentLoaded.
- setTimeout(window.finishGenIntro,3000);
+ setTimeout(window.finishGenIntro,6000);
 })();
 
 </script>
@@ -984,15 +984,15 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--cyan);outline-offse
 .gen-intro{display:none}
 html.gen-intro-pending .gen-intro{display:flex}
 html.gen-intro-pending #app,html.gen-intro-pending .theme-toggle-btn{visibility:hidden}
-.gen-intro{position:fixed;inset:0;z-index:12000;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at 50% 40%,rgba(147,51,234,.17),transparent 58%),var(--bg);color:var(--text);transition:opacity 180ms ease}
+.gen-intro{position:fixed;inset:0;z-index:12000;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at 50% 40%,rgba(147,51,234,.17),transparent 58%),var(--bg);color:var(--text);transition:opacity 350ms ease}
 .gen-intro.leaving{opacity:0;pointer-events:none}
 .intro-emblem{position:relative;width:min(72vw,300px);padding-bottom:12px;text-align:center}
-.intro-mascot{display:block;width:210px;max-width:85%;height:auto;margin:0 auto -15px;position:relative;z-index:2;transform-origin:50% 90%;animation:introLand 650ms cubic-bezier(.22,1,.36,1) both;filter:drop-shadow(0 12px 24px rgba(147,51,234,.25))}
+.intro-mascot{display:block;width:210px;max-width:85%;height:auto;margin:0 auto -15px;position:relative;z-index:2;transform-origin:50% 90%;animation:introLand 1000ms cubic-bezier(.22,1,.36,1) both;filter:drop-shadow(0 12px 24px rgba(147,51,234,.25))}
 .intro-tiles{display:flex;justify-content:center;gap:8px}
-.intro-tile{width:54px;height:54px;border:1px solid var(--border);border-radius:12px;display:grid;place-items:center;background:var(--cell-bg);font:26px var(--font-d);color:var(--text);animation:introTile 700ms ease both;animation-delay:calc(180ms + var(--i)*130ms);box-shadow:0 6px 0 rgba(0,0,0,.16)}
+.intro-tile{width:54px;height:54px;border:1px solid var(--border);border-radius:12px;display:grid;place-items:center;background:var(--cell-bg);font:26px var(--font-d);color:var(--text);animation:introTile 1100ms ease both;animation-delay:calc(300ms + var(--i)*220ms);box-shadow:0 6px 0 rgba(0,0,0,.16)}
 .intro-tile:nth-child(2){--intro-accent:#c4b5fd;--intro-fill:rgba(147,51,234,.22)}
 .intro-tile{--intro-accent:var(--yellow);--intro-fill:rgba(240,224,64,.13)}
-.intro-greeting{font-family:var(--font-d);font-size:clamp(24px,6vw,36px);letter-spacing:-.7px;margin-top:25px;animation:introGreeting 400ms ease 400ms both}
+.intro-greeting{font-family:var(--font-d);font-size:clamp(24px,6vw,36px);letter-spacing:-.7px;margin-top:25px;animation:introGreeting 650ms ease 650ms both}
 .intro-signature{font-family:var(--font-b);font-size:10px;font-weight:900;letter-spacing:3px;color:var(--text2);margin-top:13px;text-transform:uppercase}
 .intro-skip{position:absolute;bottom:max(24px,env(safe-area-inset-bottom));border:1px solid var(--border);border-radius:30px;padding:10px 18px;background:var(--cell-bg);color:var(--text2);font:800 12px var(--font-b);cursor:pointer}
 .intro-skip:focus-visible{outline:3px solid var(--cyan);outline-offset:4px}
@@ -1021,11 +1021,11 @@ html.gen-intro-pending #app,html.gen-intro-pending .theme-toggle-btn{visibility:
  if(!document.documentElement.classList.contains('gen-intro-pending')){intro.remove();return;}
  const dismiss=()=>{
   intro.classList.add('leaving');
-  setTimeout(window.finishGenIntro,180);
+  setTimeout(window.finishGenIntro,350);
  };
  intro.querySelector('button').addEventListener('click',dismiss,{once:true});
  // A brief brand entrance, never a wait for the multiplayer server.
- setTimeout(dismiss,1150);
+ setTimeout(dismiss,3000);
 })();
 
 </script>
